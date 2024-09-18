@@ -1,4 +1,3 @@
-
 const sortableList = document.getElementById("sortable");
 const previewElement = document.createElement("li");
 previewElement.classList.add("preview");
@@ -11,7 +10,6 @@ Array.from(sortableList.children).forEach((element) => {
 });
 
 function elementCoisas(element) {
-  let isDown = false;
   element.addEventListener("mousedown", (downEvent) => {
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
@@ -32,6 +30,7 @@ function elementCoisas(element) {
     previewElement.style.width = rect.width + "px";
     selectedElement.style.width = rect.width + "px";
     selectedElement.style.transition = "none";
+    sortableList.style.paddingBottom = rect.height + "px";
 
     initialX = downEvent.clientX - rect.x;
     initialY = downEvent.clientY - rect.y;
@@ -112,6 +111,7 @@ window.addEventListener("mouseup", (upEvent) => {
 
   setTimeout(() => {
     cloneElement.style.position = "static";
+    sortableList.style.paddingBottom = "0";
 
     if (afterElement) {
       sortableList.insertBefore(cloneElement, afterElement);
