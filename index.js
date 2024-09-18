@@ -30,7 +30,7 @@ function elementCoisas(element) {
     previewElement.style.width = rect.width + "px";
     selectedElement.style.width = rect.width + "px";
     selectedElement.style.transition = "none";
-    sortableList.style.paddingBottom = rect.height + "px";
+    sortableList.style.paddingBottom = rect.height + 20 + "px";
 
     initialX = downEvent.clientX - rect.x;
     initialY = downEvent.clientY - rect.y;
@@ -73,6 +73,12 @@ window.addEventListener("mousemove", (moveEvent) => {
   } else {
     sortableList.insertBefore(previewElement, null);
   }
+
+  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2)
+    sortableList.parentElement.scrollTop -= 2;
+
+  if (moveEvent.y > sortableList.parentElement.offsetHeight / 2)
+    sortableList.parentElement.scrollTop += 2;
 
   const previewElementId = Array.from(sortableList.children)
     .filter((el) => el != selectedElement)
