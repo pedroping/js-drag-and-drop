@@ -5,6 +5,9 @@ let initialX;
 let initialY;
 let selectedElement;
 
+let interval;
+let intervalValue = 2;
+
 Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
 });
@@ -74,11 +77,19 @@ window.addEventListener("mousemove", (moveEvent) => {
     sortableList.insertBefore(previewElement, null);
   }
 
-  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2)
-    sortableList.parentElement.scrollTop -= 2;
+  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2) {
+    if (interval) clearInterval(interval);
+    intervalValue = -2;
+    interval = createInterval(intervalValue);
+  } else if (moveEvent.y > sortableList.parentElement.offsetHeight / 2) {
+    if (interval) clearInterval(interval);
+    intervalValue = 2;
+    interval = createInterval(intervalValue);
+  } else {
+    if (interval) clearInterval(interval);
+    interval = null
+  }
 
-  if (moveEvent.y > sortableList.parentElement.offsetHeight / 2)
-    sortableList.parentElement.scrollTop += 2;
 
   const previewElementId = Array.from(sortableList.children)
     .filter((el) => el != selectedElement)
@@ -99,6 +110,7 @@ window.addEventListener("mousemove", (moveEvent) => {
 });
 
 window.addEventListener("mouseup", (upEvent) => {
+  if (interval) clearInterval(interval);
   if (!selectedElement) return;
 
   const previewRect = previewElement.getBoundingClientRect();
@@ -132,6 +144,12 @@ window.addEventListener("mouseup", (upEvent) => {
     });
   }, 100);
 });
+
+const createInterval = (move) => {
+  return setInterval(() => {
+    sortableList.parentElement.scrollTop += move;
+  }, 10)
+}
 
 const getDragAfterElement = (y) => {
   const draggableElements = Array.from(sortableList.children).filter(
