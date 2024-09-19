@@ -87,9 +87,8 @@ window.addEventListener("mousemove", (moveEvent) => {
     interval = createInterval(intervalValue);
   } else {
     if (interval) clearInterval(interval);
-    interval = null
+    interval = null;
   }
-
 
   const previewElementId = Array.from(sortableList.children)
     .filter((el) => el != selectedElement)
@@ -122,14 +121,15 @@ window.addEventListener("mouseup", (upEvent) => {
 
   const cloneElement = selectedElement;
 
+  sortableList.style.paddingBottom = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
   selectedElement.style.top = Math.floor(previewRect.top) - 2 + "px";
   selectedElement.style.left = Math.floor(previewRect.left) - 4 + "px";
+  selectedElement.style.width = "unset";
   selectedElement = null;
 
   setTimeout(() => {
     cloneElement.style.position = "static";
-    sortableList.style.paddingBottom = "0";
 
     if (afterElement) {
       sortableList.insertBefore(cloneElement, afterElement);
@@ -148,8 +148,8 @@ window.addEventListener("mouseup", (upEvent) => {
 const createInterval = (move) => {
   return setInterval(() => {
     sortableList.parentElement.scrollTop += move;
-  }, 10)
-}
+  }, 10);
+};
 
 const getDragAfterElement = (y) => {
   const draggableElements = Array.from(sortableList.children).filter(
