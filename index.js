@@ -29,6 +29,7 @@ function elementCoisas(element) {
 
     initialHeight = sortableList.offsetHeight;
     sortableList.style.minHeight = initialHeight + 'px';
+    sortableList.style.height = initialHeight + 'px';
 
     selectedElement.style.top = "unset";
     selectedElement.style.left = "unset";
@@ -172,8 +173,7 @@ const createInterval = (move, positionY, positionX) => {
   return setInterval(() => {
     const afterElement = getDragAfterElement(positionY);
 
-    if (afterElement)
-      sortableList.parentElement.scrollTop += move;
+    sortableList.parentElement.scrollTop += move;
 
     sortableList.insertBefore(previewElement, afterElement);
 
