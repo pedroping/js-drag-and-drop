@@ -7,6 +7,7 @@ let selectedElement;
 
 let interval;
 let intervalValue = 2;
+let initialHeight;
 
 Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
@@ -26,6 +27,9 @@ function elementCoisas(element) {
 
     const rect = selectedElement.getBoundingClientRect();
 
+    initialHeight = sortableList.offsetHeight;
+    sortableList.style.minHeight = initialHeight + 'px';
+
     selectedElement.style.top = "unset";
     selectedElement.style.left = "unset";
     selectedElement.style.position = "fixed";
@@ -33,7 +37,6 @@ function elementCoisas(element) {
     previewElement.style.width = rect.width + "px";
     selectedElement.style.width = rect.width + "px";
     selectedElement.style.transition = "none";
-    sortableList.style.paddingBottom = rect.height + 20 + "px";
 
     initialX = downEvent.clientX - rect.x;
     initialY = downEvent.clientY - rect.y;
@@ -77,14 +80,14 @@ window.addEventListener("mousemove", (moveEvent) => {
     sortableList.insertBefore(previewElement, null);
   }
 
-  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2) {
+  if (moveEvent.y < 100) {
     if (interval) clearInterval(interval);
     intervalValue = -2;
-    interval = createInterval(intervalValue);
-  } else if (moveEvent.y > sortableList.parentElement.offsetHeight / 2) {
+    interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
+  } else if (moveEvent.y > sortableList.parentElement.offsetHeight - 100) {
     if (interval) clearInterval(interval);
     intervalValue = 2;
-    interval = createInterval(intervalValue);
+    interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
   } else {
     if (interval) clearInterval(interval);
     interval = null;
@@ -108,20 +111,52 @@ window.addEventListener("mousemove", (moveEvent) => {
   selectedElement.style.left = moveEvent.x - initialX + "px";
 });
 
+const createInterval = (move, positionY, positionX) => {
+  return setInterval(() => {
+    const afterElement = getDragAfterElement(positionY);
+
+    if (afterElement)
+      sortableList.parentElement.scrollTop += move;
+
+    console.log(sortableList.parentElement.scrollTop);
+
+    if (afterElement) {
+      sortableList.insertBefore(previewElement, afterElement);
+    } else {
+      sortableList.insertBefore(previewElement, null);
+    }
+
+    const previewElementId = Array.from(sortableList.children)
+      .filter((el) => el != selectedElement)
+      .findIndex((el) => el == previewElement);
+
+    Array.from(sortableList.children)
+      .filter((el) => el != selectedElement)
+      .forEach((listElement, id) => {
+        if (id > previewElementId) {
+          listElement.style.transform = "translateY(45px)";
+        } else {
+          listElement.style.transform = "";
+        }
+      });
+
+    selectedElement.style.top = positionY - initialY + "px";
+    selectedElement.style.left = positionX - initialX + "px";
+
+  }, 10);
+};
+
+
 window.addEventListener("mouseup", (upEvent) => {
   if (interval) clearInterval(interval);
   if (!selectedElement) return;
 
+  const elementHeight = selectedElement.offsetHeight;
   const previewRect = previewElement.getBoundingClientRect();
-
-  if (sortableList.contains(previewElement))
-    sortableList.removeChild(previewElement);
 
   const afterElement = getDragAfterElement(upEvent.y);
 
   const cloneElement = selectedElement;
-
-  sortableList.style.paddingBottom = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
   selectedElement.style.top = Math.floor(previewRect.top) - 2 + "px";
   selectedElement.style.left = Math.floor(previewRect.left) - 4 + "px";
@@ -137,23 +172,25 @@ window.addEventListener("mouseup", (upEvent) => {
       sortableList.insertBefore(cloneElement, null);
     }
 
+    if (sortableList.contains(previewElement))
+      sortableList.removeChild(previewElement);
+
+    if (!afterElement)
+      sortableList.parentElement.scrollTop += elementHeight;
+
+
     Array.from(sortableList.children).forEach((listElement) => {
       listElement.style.transition = "all 200ms ease-in-out";
       listElement.style.transition = "none";
       listElement.style.transform = "translateY(0px)";
     });
+    sortableList.style.minHeight = '0px';
   }, 100);
 });
 
-const createInterval = (move) => {
-  return setInterval(() => {
-    sortableList.parentElement.scrollTop += move;
-  }, 10);
-};
-
 const getDragAfterElement = (y) => {
   const draggableElements = Array.from(sortableList.children).filter(
-    (el) => el != selectedElement
+    (el) => el != selectedElement && el != previewElement
   );
 
   return draggableElements.reduce(

@@ -1,18 +1,17 @@
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
 body,
 html {
   height: 100%;
   font-family: Arial, sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
 .sortable-list {
   max-width: 300px;
-  margin: 0 auto;
   overflow: auto;
   margin: 0 auto;
   height: 100%;
