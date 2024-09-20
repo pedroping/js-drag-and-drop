@@ -1,13 +1,13 @@
 const sortableList = document.getElementById("sortable");
 const previewElement = document.createElement("li");
 previewElement.classList.add("preview");
+
 let initialX;
 let initialY;
-let selectedElement;
-
 let interval;
-let intervalValue = 2;
 let initialHeight;
+let selectedElement;
+let intervalValue = 2;
 
 Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
@@ -33,8 +33,10 @@ function elementCoisas(element) {
     selectedElement.style.top = "unset";
     selectedElement.style.left = "unset";
     selectedElement.style.position = "fixed";
+    selectedElement.style.zIndex = "2";
     previewElement.style.display = "block";
     previewElement.style.width = rect.width + "px";
+    previewElement.style.opacity = "1";
     selectedElement.style.width = rect.width + "px";
     selectedElement.style.transition = "none";
 
@@ -51,11 +53,7 @@ function elementCoisas(element) {
     Array.from(sortableList.children)
       .filter((el) => el != selectedElement && el != previewElement)
       .forEach((listElement, id) => {
-        if (id > previewElementId - 1) {
-          listElement.style.transform = "translateY(45px)";
-        } else {
-          listElement.style.transform = "";
-        }
+        listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
 
         setTimeout(() => {
           listElement.style.transition = "all 200ms ease-in-out";
@@ -74,11 +72,7 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   const afterElement = getDragAfterElement(moveEvent.y);
 
-  if (afterElement) {
-    sortableList.insertBefore(previewElement, afterElement);
-  } else {
-    sortableList.insertBefore(previewElement, null);
-  }
+  sortableList.insertBefore(previewElement, afterElement);
 
   if (moveEvent.y < 100) {
     if (interval) clearInterval(interval);
@@ -111,42 +105,6 @@ window.addEventListener("mousemove", (moveEvent) => {
   selectedElement.style.left = moveEvent.x - initialX + "px";
 });
 
-const createInterval = (move, positionY, positionX) => {
-  return setInterval(() => {
-    const afterElement = getDragAfterElement(positionY);
-
-    if (afterElement)
-      sortableList.parentElement.scrollTop += move;
-
-    console.log(sortableList.parentElement.scrollTop);
-
-    if (afterElement) {
-      sortableList.insertBefore(previewElement, afterElement);
-    } else {
-      sortableList.insertBefore(previewElement, null);
-    }
-
-    const previewElementId = Array.from(sortableList.children)
-      .filter((el) => el != selectedElement)
-      .findIndex((el) => el == previewElement);
-
-    Array.from(sortableList.children)
-      .filter((el) => el != selectedElement)
-      .forEach((listElement, id) => {
-        if (id > previewElementId) {
-          listElement.style.transform = "translateY(45px)";
-        } else {
-          listElement.style.transform = "";
-        }
-      });
-
-    selectedElement.style.top = positionY - initialY + "px";
-    selectedElement.style.left = positionX - initialX + "px";
-
-  }, 10);
-};
-
-
 window.addEventListener("mouseup", (upEvent) => {
   if (interval) clearInterval(interval);
   if (!selectedElement) return;
@@ -157,20 +115,16 @@ window.addEventListener("mouseup", (upEvent) => {
   const afterElement = getDragAfterElement(upEvent.y);
 
   const cloneElement = selectedElement;
+  previewElement.style.opacity = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
   selectedElement.style.top = Math.floor(previewRect.top) - 2 + "px";
   selectedElement.style.left = Math.floor(previewRect.left) - 4 + "px";
-  selectedElement.style.width = "unset";
   selectedElement = null;
 
   setTimeout(() => {
     cloneElement.style.position = "static";
 
-    if (afterElement) {
-      sortableList.insertBefore(cloneElement, afterElement);
-    } else {
-      sortableList.insertBefore(cloneElement, null);
-    }
+    sortableList.insertBefore(cloneElement, afterElement);
 
     if (sortableList.contains(previewElement))
       sortableList.removeChild(previewElement);
@@ -185,6 +139,7 @@ window.addEventListener("mouseup", (upEvent) => {
       listElement.style.transform = "translateY(0px)";
     });
     sortableList.style.minHeight = '0px';
+    cloneElement.style.zIndex = "2";
   }, 100);
 });
 
@@ -211,3 +166,32 @@ const getDragAfterElement = (y) => {
     }
   ).element;
 };
+
+const createInterval = (move, positionY, positionX) => {
+  return setInterval(() => {
+    const afterElement = getDragAfterElement(positionY);
+
+    if (afterElement)
+      sortableList.parentElement.scrollTop += move;
+
+    sortableList.insertBefore(previewElement, afterElement);
+
+    const previewElementId = Array.from(sortableList.children)
+      .filter((el) => el != selectedElement)
+      .findIndex((el) => el == previewElement);
+
+    Array.from(sortableList.children)
+      .filter((el) => el != selectedElement)
+      .forEach((listElement, id) => {
+        if (id > previewElementId) {
+          listElement.style.transform = "translateY(45px)";
+        } else {
+          listElement.style.transform = "";
+        }
+      });
+
+    selectedElement.style.top = positionY - initialY + "px";
+    selectedElement.style.left = positionX - initialX + "px";
+  }, 10);
+};
+
