@@ -60,7 +60,9 @@ function elementCoisas(element) {
         }, 5);
       });
 
-    sortableList.insertBefore(previewElement, selectedElement);
+    setTimeout(() => {
+      sortableList.insertBefore(previewElement, selectedElement);
+    }, 5);
   });
 }
 
@@ -74,11 +76,11 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   sortableList.insertBefore(previewElement, afterElement);
 
-  if (moveEvent.y < 100) {
+  if (moveEvent.y < sortableList.parentElement.offsetHeight / 3) {
     if (interval) clearInterval(interval);
     intervalValue = -2;
     interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
-  } else if (moveEvent.y > sortableList.parentElement.offsetHeight - 100) {
+  } else if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 3) {
     if (interval) clearInterval(interval);
     intervalValue = 2;
     interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
@@ -138,7 +140,6 @@ window.addEventListener("mouseup", (upEvent) => {
       listElement.style.transition = "none";
       listElement.style.transform = "translateY(0px)";
     });
-    sortableList.style.minHeight = '0px';
     cloneElement.style.zIndex = "2";
   }, 100);
 });
