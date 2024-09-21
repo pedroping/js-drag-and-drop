@@ -4,6 +4,10 @@ html {
   font-family: Arial, sans-serif;
 }
 
+body {
+  padding-bottom: 10px;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;

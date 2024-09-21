@@ -77,12 +77,12 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   sortableList.insertBefore(previewElement, afterElement);
 
-  if (moveEvent.y < sortableList.parentElement.offsetHeight / 3) {
-    if (interval) clearInterval(interval);
+  if (moveEvent.y < 150) {
+    if (interval || intervalValue != -2) clearInterval(interval);
     intervalValue = -2;
     interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
-  } else if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 3) {
-    if (interval) clearInterval(interval);
+  } else if (moveEvent.y > 150) {
+    if (interval || intervalValue != 2) clearInterval(interval);
     intervalValue = 2;
     interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
   } else {
