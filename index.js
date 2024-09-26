@@ -126,6 +126,7 @@ window.addEventListener("mouseup", (upEvent) => {
 
   setTimeout(() => {
     cloneElement.style.position = "static";
+    cloneElement.style.width = "100%";
 
     sortableList.insertBefore(cloneElement, afterElement);
 
