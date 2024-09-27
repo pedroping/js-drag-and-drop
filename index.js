@@ -63,6 +63,10 @@ function elementCoisas(element) {
 
     setTimeout(() => {
       sortableList.insertBefore(previewElement, selectedElement);
+
+      const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
+
+      if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
     }, 5);
   });
 }
@@ -76,6 +80,8 @@ window.addEventListener("mousemove", (moveEvent) => {
   const afterElement = getDragAfterElement(moveEvent.y);
 
   sortableList.insertBefore(previewElement, afterElement);
+
+  const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
 
   if (moveEvent.y < sortableList.parentElement.offsetHeight / 2.5) {
     if (interval || intervalValue != -2) clearInterval(interval);
@@ -103,6 +109,8 @@ window.addEventListener("mousemove", (moveEvent) => {
         listElement.style.transform = "";
       }
     });
+
+  if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
 
   selectedElement.style.top = moveEvent.y - initialY + "px";
   selectedElement.style.left = moveEvent.x - initialX + "px";
@@ -178,6 +186,8 @@ const createInterval = (move, positionY, positionX) => {
 
     sortableList.insertBefore(previewElement, afterElement);
 
+    const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
+
     const previewElementId = Array.from(sortableList.children)
       .filter((el) => el != selectedElement)
       .findIndex((el) => el == previewElement);
@@ -191,6 +201,8 @@ const createInterval = (move, positionY, positionX) => {
           listElement.style.transform = "";
         }
       });
+
+    if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
 
     selectedElement.style.top = positionY - initialY + "px";
     selectedElement.style.left = positionX - initialX + "px";
