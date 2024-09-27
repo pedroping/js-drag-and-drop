@@ -8,6 +8,7 @@ let interval;
 let initialHeight;
 let selectedElement;
 let intervalValue = 2;
+let actualYPosition = 0;
 
 Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
@@ -41,6 +42,7 @@ function elementCoisas(element) {
     selectedElement.style.width = rect.width + "px";
     selectedElement.style.transition = "none";
 
+    actualYPosition = downEvent.clientY
     initialX = downEvent.clientX - rect.x;
     initialY = downEvent.clientY - rect.y;
 
@@ -83,19 +85,6 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
 
-  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2.5) {
-    if (interval || intervalValue != -2) clearInterval(interval);
-    intervalValue = -2;
-    interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
-  } else if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 2.5) {
-    if (interval || intervalValue != 2) clearInterval(interval);
-    intervalValue = 2;
-    interval = createInterval(intervalValue, moveEvent.y, moveEvent.x);
-  } else {
-    if (interval) clearInterval(interval);
-    interval = null;
-  }
-
   const previewElementId = Array.from(sortableList.children)
     .filter((el) => el != selectedElement)
     .findIndex((el) => el == previewElement);
@@ -114,6 +103,31 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   selectedElement.style.top = moveEvent.y - initialY + "px";
   selectedElement.style.left = moveEvent.x - initialX + "px";
+
+  actualYPosition = moveEvent.y;
+
+  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2.5) {
+    if (interval && intervalValue == -2) return;
+
+    if (interval) clearInterval(interval);
+
+    intervalValue = -2;
+    interval = createInterval(intervalValue);
+    return;
+  }
+
+  if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 2.5) {
+    if (interval && intervalValue == 2) return;
+
+    if (interval) clearInterval(interval);
+
+    intervalValue = 2;
+    interval = createInterval(intervalValue);
+    return;
+  }
+
+  if (interval) clearInterval(interval);
+  interval = null;
 });
 
 window.addEventListener("mouseup", (upEvent) => {
@@ -178,16 +192,15 @@ const getDragAfterElement = (y) => {
   ).element;
 };
 
-const createInterval = (move, positionY, positionX) => {
+const createInterval = (move) => {
   return setInterval(() => {
-    const afterElement = getDragAfterElement(positionY);
 
     sortableList.parentElement.scrollTop += move;
 
+    const afterElement = getDragAfterElement(actualYPosition);
+
     sortableList.insertBefore(previewElement, afterElement);
-
     const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
-
     const previewElementId = Array.from(sortableList.children)
       .filter((el) => el != selectedElement)
       .findIndex((el) => el == previewElement);
@@ -204,8 +217,6 @@ const createInterval = (move, positionY, positionX) => {
 
     if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
 
-    selectedElement.style.top = positionY - initialY + "px";
-    selectedElement.style.left = positionX - initialX + "px";
   }, 10);
 };
 
