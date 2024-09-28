@@ -106,7 +106,7 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   actualYPosition = moveEvent.y;
 
-  if (moveEvent.y < sortableList.parentElement.offsetHeight / 2.5) {
+  if (moveEvent.y < sortableList.parentElement.offsetHeight / 5) {
     if (interval && intervalValue == -2) return;
 
     if (interval) clearInterval(interval);
@@ -116,7 +116,7 @@ window.addEventListener("mousemove", (moveEvent) => {
     return;
   }
 
-  if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 2.5) {
+  if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 5) {
     if (interval && intervalValue == 2) return;
 
     if (interval) clearInterval(interval);
