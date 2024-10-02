@@ -18,59 +18,18 @@ function elementCoisas(element) {
   element.addEventListener("mousedown", (downEvent) => {
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
-    selectedElement = element;
 
-    Array.from(sortableList.children)
-      .filter((el) => el != selectedElement)
-      .forEach((el) => {
-        el.style.transition = "none";
-      });
-
-    const rect = selectedElement.getBoundingClientRect();
-
-    initialHeight = sortableList.offsetHeight;
-    sortableList.style.minHeight = initialHeight + 'px';
-    sortableList.style.height = initialHeight + 'px';
-
-    selectedElement.style.top = "unset";
-    selectedElement.style.left = "unset";
-    selectedElement.style.position = "fixed";
-    selectedElement.style.zIndex = "2";
-    previewElement.style.display = "block";
-    previewElement.style.width = rect.width + "px";
-    previewElement.style.opacity = "1";
-    selectedElement.style.width = rect.width + "px";
-    selectedElement.style.transition = "none";
-
-    actualYPosition = downEvent.clientY
-    initialX = downEvent.clientX - rect.x;
-    initialY = downEvent.clientY - rect.y;
-
-    selectedElement.style.top = downEvent.clientY - initialY + "px";
-    selectedElement.style.left = downEvent.clientX - initialX + "px";
-
-    const previewElementId = Array.from(sortableList.children).findIndex(
-      (el) => el == selectedElement
-    );
-
-    Array.from(sortableList.children)
-      .filter((el) => el != selectedElement && el != previewElement)
-      .forEach((listElement, id) => {
-        listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
-
-        setTimeout(() => {
-          listElement.style.transition = "all 200ms ease-in-out";
-        }, 5);
-      });
-
-    setTimeout(() => {
-      sortableList.insertBefore(previewElement, selectedElement);
-
-      const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
-
-      if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
-    }, 5);
+    downEventHandle(downEvent.clientX, downEvent.clientY, element);
   });
+
+  element.addEventListener("touchstart", (touchDownEvent) => {
+    touchDownEvent.preventDefault();
+    touchDownEvent.stopImmediatePropagation();
+
+    const touch = touchDownEvent.touches[0];
+    downEventHandle(touch.pageX, touch.pageY, element);
+  })
+
 }
 
 window.addEventListener("mousemove", (moveEvent) => {
@@ -79,7 +38,35 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   if (!selectedElement) return;
 
-  const afterElement = getDragAfterElement(moveEvent.y);
+  moveEventHandle(moveEvent.x, moveEvent.y);
+});
+
+window.addEventListener("touchmove", (touchMoveEvent) => {
+  touchMoveEvent.stopImmediatePropagation();
+
+  if (!selectedElement) return;
+
+  const touch = touchMoveEvent.touches[0];
+  moveEventHandle(touch.pageX, touch.pageY);
+})
+
+window.addEventListener("mouseup", (upEvent) => {
+  if (interval) clearInterval(interval);
+  if (!selectedElement) return;
+
+  upEventHandle(upEvent.y);
+});
+
+window.addEventListener("touchend", (touchEndEvent) => {
+  if (interval) clearInterval(interval);
+  if (!selectedElement) return;
+
+  const touch = touchEndEvent.changedTouches[0];
+  upEventHandle(touch.pageY);
+})
+
+const moveEventHandle = (x, y) => {
+  const afterElement = getDragAfterElement(y);
 
   sortableList.insertBefore(previewElement, afterElement);
 
@@ -101,12 +88,12 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
 
-  selectedElement.style.top = moveEvent.y - initialY + "px";
-  selectedElement.style.left = moveEvent.x - initialX + "px";
+  selectedElement.style.top = y - initialY + "px";
+  selectedElement.style.left = x - initialX + "px";
 
-  actualYPosition = moveEvent.y;
+  actualYPosition = y;
 
-  if (moveEvent.y < sortableList.parentElement.offsetHeight / 5) {
+  if (y < sortableList.parentElement.offsetHeight / 5) {
     if (interval && intervalValue == -2) return;
 
     if (interval) clearInterval(interval);
@@ -116,7 +103,7 @@ window.addEventListener("mousemove", (moveEvent) => {
     return;
   }
 
-  if (moveEvent.y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 5) {
+  if (y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 5) {
     if (interval && intervalValue == 2) return;
 
     if (interval) clearInterval(interval);
@@ -128,16 +115,67 @@ window.addEventListener("mousemove", (moveEvent) => {
 
   if (interval) clearInterval(interval);
   interval = null;
-});
+}
 
-window.addEventListener("mouseup", (upEvent) => {
-  if (interval) clearInterval(interval);
-  if (!selectedElement) return;
+const downEventHandle = (x, y, element) => {
+  selectedElement = element;
 
+  Array.from(sortableList.children)
+    .filter((el) => el != selectedElement)
+    .forEach((el) => {
+      el.style.transition = "none";
+    });
+
+  const rect = selectedElement.getBoundingClientRect();
+
+  initialHeight = sortableList.offsetHeight;
+  sortableList.style.minHeight = initialHeight + 'px';
+  sortableList.style.height = initialHeight + 'px';
+
+  selectedElement.style.top = "unset";
+  selectedElement.style.left = "unset";
+  selectedElement.style.position = "fixed";
+  selectedElement.style.zIndex = "2";
+  previewElement.style.display = "block";
+  previewElement.style.width = rect.width + "px";
+  previewElement.style.opacity = "1";
+  selectedElement.style.width = rect.width + "px";
+  selectedElement.style.transition = "none";
+
+  actualYPosition = y
+  initialX = x - rect.x;
+  initialY = y - rect.y;
+
+  selectedElement.style.top = y - initialY + "px";
+  selectedElement.style.left = x - initialX + "px";
+
+  const previewElementId = Array.from(sortableList.children).findIndex(
+    (el) => el == selectedElement
+  );
+
+  Array.from(sortableList.children)
+    .filter((el) => el != selectedElement && el != previewElement)
+    .forEach((listElement, id) => {
+      listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
+
+      setTimeout(() => {
+        listElement.style.transition = "all 200ms ease-in-out";
+      }, 0);
+    });
+
+
+  sortableList.insertBefore(previewElement, selectedElement);
+
+  const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
+
+  if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
+}
+
+const upEventHandle = (y) => {
   const elementHeight = selectedElement.offsetHeight;
   const previewRect = previewElement.getBoundingClientRect();
 
-  const afterElement = getDragAfterElement(upEvent.y);
+  const afterElement = getDragAfterElement(y);
 
   const cloneElement = selectedElement;
   previewElement.style.opacity = "0";
@@ -166,7 +204,7 @@ window.addEventListener("mouseup", (upEvent) => {
     });
     cloneElement.style.zIndex = "2";
   }, 100);
-});
+}
 
 const getDragAfterElement = (y) => {
   const draggableElements = Array.from(sortableList.children).filter(
