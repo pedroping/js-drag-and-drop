@@ -10,6 +10,13 @@ let selectedElement;
 let intervalValue = 2;
 let actualYPosition = 0;
 
+let startTouch = false;
+let initialPositions = {
+  x: 0,
+  y: 0
+}
+
+
 Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
 });
@@ -19,38 +26,70 @@ function elementCoisas(element) {
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
 
-    downEventHandle(downEvent.clientX, downEvent.clientY, element);
+    startTouch = true;
+    initialPositions = {
+      x: downEvent.clientX,
+      y: downEvent.clientY
+    }
+
+    downEventHandle(initialPositions.x, initialPositions.y, element);
   });
 
   element.addEventListener("touchstart", (touchDownEvent) => {
-    touchDownEvent.preventDefault();
-    touchDownEvent.stopImmediatePropagation();
+    console.log('Touch');
 
+    startTouch = true;
     const touch = touchDownEvent.touches[0];
-    downEventHandle(touch.pageX, touch.pageY, element);
+    initialPositions = {
+      x: touch.pageX,
+      y: touch.pageY
+    }
+
+    setTimeout(() => {
+      if (!startTouch) return;
+      console.log('Touch start');
+
+      touchDownEvent.preventDefault();
+      touchDownEvent.stopImmediatePropagation();
+      downEventHandle(initialPositions.x, initialPositions.y, element);
+    }, 500)
   })
 
 }
 
 window.addEventListener("mousemove", (moveEvent) => {
+  initialPositions = {
+    x: moveEvent.x,
+    y: moveEvent.y
+  }
+
+  if (!selectedElement || !startTouch) return;
+
   moveEvent.preventDefault();
   moveEvent.stopImmediatePropagation();
-
-  if (!selectedElement) return;
 
   moveEventHandle(moveEvent.x, moveEvent.y);
 });
 
 window.addEventListener("touchmove", (touchMoveEvent) => {
+  startTouch = false;
+
+  const touch = touchMoveEvent.touches[0];
+
+  initialPositions = {
+    x: touch.pageX,
+    y: touch.pageY
+  }
+
   touchMoveEvent.stopImmediatePropagation();
 
   if (!selectedElement) return;
 
-  const touch = touchMoveEvent.touches[0];
   moveEventHandle(touch.pageX, touch.pageY);
 })
 
 window.addEventListener("mouseup", (upEvent) => {
+  startTouch = false;
   if (interval) clearInterval(interval);
   if (!selectedElement) return;
 
@@ -58,6 +97,7 @@ window.addEventListener("mouseup", (upEvent) => {
 });
 
 window.addEventListener("touchend", (touchEndEvent) => {
+  startTouch = false;
   if (interval) clearInterval(interval);
   if (!selectedElement) return;
 
