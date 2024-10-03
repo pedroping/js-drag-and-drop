@@ -11,10 +11,6 @@ let intervalValue = 2;
 let actualYPosition = 0;
 
 let startTouch = false;
-let initialPositions = {
-  x: 0,
-  y: 0
-}
 
 
 Array.from(sortableList.children).forEach((element) => {
@@ -27,42 +23,25 @@ function elementCoisas(element) {
     downEvent.stopImmediatePropagation();
 
     startTouch = true;
-    initialPositions = {
-      x: downEvent.clientX,
-      y: downEvent.clientY
-    }
-
-    downEventHandle(initialPositions.x, initialPositions.y, element);
+    downEventHandle(downEvent.clientX, downEvent.clientY, element);
   });
 
   element.addEventListener("touchstart", (touchDownEvent) => {
-    console.log('Touch');
-
     startTouch = true;
     const touch = touchDownEvent.touches[0];
-    initialPositions = {
-      x: touch.pageX,
-      y: touch.pageY
-    }
 
     setTimeout(() => {
       if (!startTouch) return;
-      console.log('Touch start');
 
       touchDownEvent.preventDefault();
       touchDownEvent.stopImmediatePropagation();
-      downEventHandle(initialPositions.x, initialPositions.y, element);
+      downEventHandle(touch.pageX, touch.pageY, element);
     }, 500)
   })
 
 }
 
 window.addEventListener("mousemove", (moveEvent) => {
-  initialPositions = {
-    x: moveEvent.x,
-    y: moveEvent.y
-  }
-
   if (!selectedElement || !startTouch) return;
 
   moveEvent.preventDefault();
@@ -75,11 +54,6 @@ window.addEventListener("touchmove", (touchMoveEvent) => {
   startTouch = false;
 
   const touch = touchMoveEvent.touches[0];
-
-  initialPositions = {
-    x: touch.pageX,
-    y: touch.pageY
-  }
 
   touchMoveEvent.stopImmediatePropagation();
 
