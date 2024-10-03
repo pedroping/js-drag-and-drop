@@ -55,6 +55,7 @@ window.addEventListener("touchmove", (touchMoveEvent) => {
 
   const touch = touchMoveEvent.touches[0];
 
+  touchMoveEvent.preventDefault();
   touchMoveEvent.stopImmediatePropagation();
 
   if (!selectedElement) return;
