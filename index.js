@@ -17,10 +17,6 @@ Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
 });
 
-sortableList.parentElement.addEventListener("wheel", (e) => {
-  e.preventDefault()
-}, { passive: false })
-
 function elementCoisas(element) {
   element.addEventListener("mousedown", (downEvent) => {
     downEvent.preventDefault();
@@ -40,6 +36,10 @@ function elementCoisas(element) {
       touchDownEvent.preventDefault();
       touchDownEvent.stopImmediatePropagation();
       downEventHandle(touch.pageX, touch.pageY, element);
+
+      sortableList.parentElement.addEventListener("wheel", (e) => {
+        e.preventDefault()
+      }, { passive: false })
     }, 500)
   })
 
@@ -85,6 +85,7 @@ window.addEventListener("touchend", (touchEndEvent) => {
   const touch = touchEndEvent.changedTouches[0];
   upEventHandle(touch.pageY);
   sortableList.parentElement.style.touchAction = "";
+  sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
 })
 
 const moveEventHandle = (x, y) => {
