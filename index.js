@@ -17,6 +17,10 @@ Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
 });
 
+sortableList.parentElement.addEventListener("wheel", (e) => {
+  e.preventDefault()
+}, { passive: false })
+
 function elementCoisas(element) {
   element.addEventListener("mousedown", (downEvent) => {
     downEvent.preventDefault();
@@ -60,6 +64,8 @@ window.addEventListener("touchmove", (touchMoveEvent) => {
 
   if (!selectedElement) return;
 
+  sortableList.parentElement.style.touchAction = "none";
+
   moveEventHandle(touch.pageX, touch.pageY);
 })
 
@@ -78,6 +84,7 @@ window.addEventListener("touchend", (touchEndEvent) => {
 
   const touch = touchEndEvent.changedTouches[0];
   upEventHandle(touch.pageY);
+  sortableList.parentElement.style.touchAction = "";
 })
 
 const moveEventHandle = (x, y) => {
