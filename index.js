@@ -88,6 +88,11 @@ window.addEventListener("touchend", (touchEndEvent) => {
   sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
 })
 
+window.addEventListener("touchend", () => {
+  sortableList.parentElement.style.touchAction = "";
+  sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
+})
+
 const moveEventHandle = (x, y) => {
   const afterElement = getDragAfterElement(y);
 
