@@ -12,7 +12,6 @@ let actualYPosition = 0;
 
 let startTouch = false;
 
-
 Array.from(sortableList.children).forEach((element) => {
   elementCoisas(element);
 });
@@ -93,12 +92,66 @@ window.addEventListener("touchend", () => {
   sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
 })
 
+const downEventHandle = (x, y, element) => {
+  selectedElement = element;
+
+  Array.from(sortableList.children)
+    .forEach((el) => {
+      el.style.transition = "none";
+    });
+
+  const rect = selectedElement.getBoundingClientRect();
+
+  initialHeight = sortableList.offsetHeight;
+  sortableList.style.minHeight = initialHeight + 'px';
+  sortableList.style.height = initialHeight + 'px';
+
+  selectedElement.style.top = "unset";
+  selectedElement.style.left = "unset";
+  selectedElement.style.position = "fixed";
+  selectedElement.style.zIndex = "2";
+  selectedElement.style.width = rect.width + "px";
+  selectedElement.style.transition = "none";
+
+  previewElement.style.display = "block";
+  previewElement.style.width = rect.width + "px";
+  previewElement.style.opacity = "1";
+
+  actualYPosition = y
+  initialX = x - rect.x;
+  initialY = y - rect.y;
+
+  selectedElement.style.top = y - initialY + "px";
+  selectedElement.style.left = x - initialX + "px";
+
+  const previewElementId = Array.from(sortableList.children).findIndex(
+    (el) => el == selectedElement
+  );
+
+  Array.from(sortableList.children)
+    .filter((el) => el != selectedElement && el != previewElement)
+    .forEach((listElement, id) => {
+  
+      listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
+
+      setTimeout(() => {
+        listElement.style.transition = "all 200ms ease-in-out";
+      }, 0);
+    });
+
+  sortableList.insertBefore(previewElement, selectedElement);
+
+  const previewIsFirst = getIsPreviewFirst();
+
+  if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
+}
+
 const moveEventHandle = (x, y) => {
   const afterElement = getDragAfterElement(y);
 
+  previewElement.style.transition = 'none';
   sortableList.insertBefore(previewElement, afterElement);
-
-  const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
+  const previewIsFirst = getIsPreviewFirst();
 
   const previewElementId = Array.from(sortableList.children)
     .filter((el) => el != selectedElement)
@@ -145,60 +198,6 @@ const moveEventHandle = (x, y) => {
   interval = null;
 }
 
-const downEventHandle = (x, y, element) => {
-  selectedElement = element;
-
-  Array.from(sortableList.children)
-    .filter((el) => el != selectedElement)
-    .forEach((el) => {
-      el.style.transition = "none";
-    });
-
-  const rect = selectedElement.getBoundingClientRect();
-
-  initialHeight = sortableList.offsetHeight;
-  sortableList.style.minHeight = initialHeight + 'px';
-  sortableList.style.height = initialHeight + 'px';
-
-  selectedElement.style.top = "unset";
-  selectedElement.style.left = "unset";
-  selectedElement.style.position = "fixed";
-  selectedElement.style.zIndex = "2";
-  previewElement.style.display = "block";
-  previewElement.style.width = rect.width + "px";
-  previewElement.style.opacity = "1";
-  selectedElement.style.width = rect.width + "px";
-  selectedElement.style.transition = "none";
-
-  actualYPosition = y
-  initialX = x - rect.x;
-  initialY = y - rect.y;
-
-  selectedElement.style.top = y - initialY + "px";
-  selectedElement.style.left = x - initialX + "px";
-
-  const previewElementId = Array.from(sortableList.children).findIndex(
-    (el) => el == selectedElement
-  );
-
-  Array.from(sortableList.children)
-    .filter((el) => el != selectedElement && el != previewElement)
-    .forEach((listElement, id) => {
-      listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
-
-      setTimeout(() => {
-        listElement.style.transition = "all 200ms ease-in-out";
-      }, 0);
-    });
-
-
-  sortableList.insertBefore(previewElement, selectedElement);
-
-  const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
-
-  if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
-}
-
 const upEventHandle = (y) => {
   const elementHeight = selectedElement.offsetHeight;
   const previewRect = previewElement.getBoundingClientRect();
@@ -206,32 +205,46 @@ const upEventHandle = (y) => {
   const afterElement = getDragAfterElement(y);
 
   const cloneElement = selectedElement;
+
+  let hasLeft = false;
+  let hasTop = false;
+
+  cloneElement.addEventListener('transitionend', (e) => {
+    if (e.propertyName == 'left')
+      hasLeft = true;
+
+    if (e.propertyName == 'top')
+      hasTop = true;
+
+
+    if (hasLeft && hasTop) {
+      cloneElement.style.position = "static";
+
+      sortableList.insertBefore(cloneElement, afterElement);
+
+      if (sortableList.contains(previewElement))
+        sortableList.removeChild(previewElement);
+
+      if (!afterElement)
+        sortableList.parentElement.scrollTop += elementHeight;
+
+      Array.from(sortableList.children).forEach((listElement) => {
+        listElement.style.transition = "all 200ms ease-in-out";
+        listElement.style.transition = "none";
+        listElement.style.transform = "translateY(0px)";
+      });
+
+      cloneElement.style.zIndex = "2";
+      cloneElement.removeEventListener('transitionend', () => { });
+      return;
+    }
+  })
+
   previewElement.style.opacity = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
-  selectedElement.style.top = Math.floor(previewRect.top) - 2 + "px";
-  selectedElement.style.left = Math.floor(previewRect.left) - 4 + "px";
+  selectedElement.style.top = Math.floor(previewRect.top) + "px";
+  selectedElement.style.left = Math.floor(previewRect.left) + "px";
   selectedElement = null;
-
-  setTimeout(() => {
-    cloneElement.style.position = "static";
-    cloneElement.style.width = "100%";
-
-    sortableList.insertBefore(cloneElement, afterElement);
-
-    if (sortableList.contains(previewElement))
-      sortableList.removeChild(previewElement);
-
-    if (!afterElement)
-      sortableList.parentElement.scrollTop += elementHeight;
-
-
-    Array.from(sortableList.children).forEach((listElement) => {
-      listElement.style.transition = "all 200ms ease-in-out";
-      listElement.style.transition = "none";
-      listElement.style.transform = "translateY(0px)";
-    });
-    cloneElement.style.zIndex = "2";
-  }, 100);
 }
 
 const getDragAfterElement = (y) => {
@@ -266,7 +279,8 @@ const createInterval = (move) => {
     const afterElement = getDragAfterElement(actualYPosition);
 
     sortableList.insertBefore(previewElement, afterElement);
-    const previewIsFirst = Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
+    const previewIsFirst = getIsPreviewFirst();
+
     const previewElementId = Array.from(sortableList.children)
       .filter((el) => el != selectedElement)
       .findIndex((el) => el == previewElement);
@@ -282,7 +296,7 @@ const createInterval = (move) => {
       });
 
     if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
-
   }, 10);
 };
 
+const getIsPreviewFirst = () => Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
