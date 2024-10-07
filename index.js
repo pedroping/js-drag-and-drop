@@ -13,11 +13,16 @@ let startTouch = false;
 let preventListener = false;
 
 Array.from(sortableLists).forEach(sortable => {
-  sortable.setAttribute('height', sortable.offsetHeight)
+  listCoisas(sortable)
+
   Array.from(sortable.children).forEach((element) => {
     elementCoisas(element);
   });
 })
+
+function listCoisas(listElement) {
+  listElement.setAttribute('height', listElement.offsetHeight);
+}
 
 function elementCoisas(element) {
   element.addEventListener("mousedown", (downEvent) => {
@@ -97,6 +102,49 @@ window.addEventListener("touchend", () => {
   sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
 })
 
+const changeList = (x) => {
+  const list = Array.from(sortableLists).find(list => {
+    const rect = list.getBoundingClientRect();
+    return x > rect.left && x < (rect.left + rect.width)
+  })
+
+  if (!list || list == sortableList) return;
+
+  sortableList = list;
+  const elementList = selectedElement.parentElement;
+
+
+  Array.from(sortableLists)
+    .filter(list => list != sortableList && list != elementList)
+    .forEach(list => {
+      const height = +list.getAttribute('height');
+
+      list.style.minHeight = height + 'px';
+      list.style.height = height + 'px';
+
+      Array.from(list.children).forEach(el => el.style.transform = '');
+    })
+
+  if (elementList != list) {
+    const elementHeight = selectedElement.getBoundingClientRect().height;
+
+    const oldHeight = +sortableList.getAttribute('height')
+    sortableList.style.minHeight = oldHeight + elementHeight + 'px';
+    sortableList.style.height = oldHeight + elementHeight + 'px';
+
+    const parentListHeight = +selectedElement.parentElement.getAttribute('height');
+    selectedElement.parentElement.style.minHeight = parentListHeight - selectedElement.offsetHeight + 'px';
+    selectedElement.parentElement.style.height = parentListHeight - selectedElement.offsetHeight + 'px';
+
+    Array.from(sortableList.children).filter(el => el != previewElement).forEach(el => el.style.transition = "all 200ms ease-in-out")
+    Array.from(selectedElement.parentElement.children).forEach(el => el.style.transform = '');
+  } else {
+    const oldHeight = +sortableList.getAttribute('height')
+    sortableList.style.minHeight = oldHeight + 'px';
+    sortableList.style.height = oldHeight + 'px';
+  }
+}
+
 const downEventHandle = (x, y, element) => {
   selectedElement = element;
   const rect = selectedElement.getBoundingClientRect();
@@ -151,6 +199,7 @@ const downEventHandle = (x, y, element) => {
 }
 
 const moveEventHandle = (x, y) => {
+  changeList(x);
   const afterElement = getDragAfterElement(y);
   previewElement.style.transition = 'none';
   sortableList.insertBefore(previewElement, afterElement);
@@ -183,7 +232,7 @@ const moveEventHandle = (x, y) => {
     if (interval) clearInterval(interval);
 
     intervalValue = -2;
-    interval = createInterval(intervalValue);
+    interval = createListYInterval(intervalValue);
     return;
   }
 
@@ -193,7 +242,7 @@ const moveEventHandle = (x, y) => {
     if (interval) clearInterval(interval);
 
     intervalValue = 2;
-    interval = createInterval(intervalValue);
+    interval = createListYInterval(intervalValue);
     return;
   }
 
@@ -226,6 +275,19 @@ const upEventHandle = (y) => {
     if (hasLeft && hasTop) {
       preventListener = true;
       cloneElement.style.position = "static";
+
+      if (cloneElement.parentElement != sortableList) {
+        const parentListHeight = +cloneElement.parentElement.getAttribute('height');
+
+        cloneElement.parentElement.setAttribute('height', parentListHeight - cloneElement.offsetHeight)
+        cloneElement.parentElement.style.height = parentListHeight - cloneElement.offsetHeight + 'px';
+        cloneElement.parentElement.style.minHeight = parentListHeight - cloneElement.offsetHeight + 'px';
+
+        const newListHeight = +sortableList.getAttribute('height');
+
+        sortableList.style.height = newListHeight + cloneElement.offsetHeight + 'px';
+        sortableList.style.minHeight = newListHeight + cloneElement.offsetHeight + 'px';
+      }
 
       sortableList.insertBefore(cloneElement, afterElement);
 
@@ -278,7 +340,7 @@ const getDragAfterElement = (y) => {
   ).element;
 };
 
-const createInterval = (move) => {
+const createListYInterval = (move) => {
   return setInterval(() => {
     sortableList.parentElement.scrollTop += move;
 
