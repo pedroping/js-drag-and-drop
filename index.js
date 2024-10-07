@@ -1,25 +1,30 @@
-const sortableList = document.getElementById("sortable");
+const sortableLists = document.querySelectorAll("#sortable");
 const previewElement = document.createElement("li");
 previewElement.classList.add("preview");
 
 let initialX;
 let initialY;
 let interval;
-let initialHeight;
+let sortableList;
 let selectedElement;
 let intervalValue = 2;
 let actualYPosition = 0;
-
 let startTouch = false;
+let preventListener = false;
 
-Array.from(sortableList.children).forEach((element) => {
-  elementCoisas(element);
-});
+Array.from(sortableLists).forEach(sortable => {
+  sortable.setAttribute('height', sortable.offsetHeight)
+  Array.from(sortable.children).forEach((element) => {
+    elementCoisas(element);
+  });
+})
 
 function elementCoisas(element) {
   element.addEventListener("mousedown", (downEvent) => {
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
+
+    sortableList = element.parentElement;
 
     startTouch = true;
     downEventHandle(downEvent.clientX, downEvent.clientY, element);
@@ -27,6 +32,7 @@ function elementCoisas(element) {
 
   element.addEventListener("touchstart", (touchDownEvent) => {
     startTouch = true;
+    sortableList = element.parentElement;
     const touch = touchDownEvent.touches[0];
 
     setTimeout(() => {
@@ -41,7 +47,6 @@ function elementCoisas(element) {
       }, { passive: false })
     }, 500)
   })
-
 }
 
 window.addEventListener("mousemove", (moveEvent) => {
@@ -94,18 +99,16 @@ window.addEventListener("touchend", () => {
 
 const downEventHandle = (x, y, element) => {
   selectedElement = element;
+  const rect = selectedElement.getBoundingClientRect();
+
+  sortableList.style.minHeight = +sortableList.getAttribute('height') + 'px';
+  sortableList.style.height = +sortableList.getAttribute('height') + 'px';
 
   Array.from(sortableList.children)
     .forEach((el) => {
       el.style.transition = "none";
       el.removeEventListener('transitionend', () => { }, true);
     });
-
-  const rect = selectedElement.getBoundingClientRect();
-
-  initialHeight = sortableList.offsetHeight;
-  sortableList.style.minHeight = initialHeight + 'px';
-  sortableList.style.height = initialHeight + 'px';
 
   selectedElement.style.top = "unset";
   selectedElement.style.left = "unset";
@@ -149,7 +152,6 @@ const downEventHandle = (x, y, element) => {
 
 const moveEventHandle = (x, y) => {
   const afterElement = getDragAfterElement(y);
-
   previewElement.style.transition = 'none';
   sortableList.insertBefore(previewElement, afterElement);
   const previewIsFirst = getIsPreviewFirst();
@@ -210,15 +212,19 @@ const upEventHandle = (y) => {
   let hasLeft = false;
   let hasTop = false;
 
+  preventListener = false;
+
   cloneElement.addEventListener('transitionend', (e) => {
+    if (preventListener) return;
+
     if (e.propertyName == 'left')
       hasLeft = true;
 
     if (e.propertyName == 'top')
       hasTop = true;
 
-
     if (hasLeft && hasTop) {
+      preventListener = true;
       cloneElement.style.position = "static";
 
       sortableList.insertBefore(cloneElement, afterElement);
@@ -236,7 +242,7 @@ const upEventHandle = (y) => {
       });
 
       cloneElement.style.zIndex = "2";
-      cloneElement.removeEventListener('transitionend', () => { }, true);
+      cloneElement.removeEventListener('transitionend', () => { }, { capture: true });
       return;
     }
   })
@@ -274,7 +280,6 @@ const getDragAfterElement = (y) => {
 
 const createInterval = (move) => {
   return setInterval(() => {
-
     sortableList.parentElement.scrollTop += move;
 
     const afterElement = getDragAfterElement(actualYPosition);
