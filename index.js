@@ -98,6 +98,7 @@ const downEventHandle = (x, y, element) => {
   Array.from(sortableList.children)
     .forEach((el) => {
       el.style.transition = "none";
+      el.removeEventListener('transitionend', () => { }, true);
     });
 
   const rect = selectedElement.getBoundingClientRect();
@@ -131,7 +132,7 @@ const downEventHandle = (x, y, element) => {
   Array.from(sortableList.children)
     .filter((el) => el != selectedElement && el != previewElement)
     .forEach((listElement, id) => {
-  
+
       listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
 
       setTimeout(() => {
@@ -235,14 +236,14 @@ const upEventHandle = (y) => {
       });
 
       cloneElement.style.zIndex = "2";
-      cloneElement.removeEventListener('transitionend', () => { });
+      cloneElement.removeEventListener('transitionend', () => { }, true);
       return;
     }
   })
 
   previewElement.style.opacity = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
-  selectedElement.style.top = Math.floor(previewRect.top) + "px";
+  selectedElement.style.top = Math.floor(previewRect.top) - 5 + "px";
   selectedElement.style.left = Math.floor(previewRect.left) + "px";
   selectedElement = null;
 }
