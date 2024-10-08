@@ -28,26 +28,20 @@ function listCoisas(listElement) {
 }
 
 function elementCoisas(element) {
-  element.addEventListener("contextmenu", (event) => {
-    startTouch = false;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    if (listYInterval) clearInterval(listYInterval);
-    if (pageXInterval) clearInterval(pageXInterval);
-    listYInterval = null;
-    pageXInterval = null;
-
-    upEventHandle();
-  })
-
   element.addEventListener("mousedown", (downEvent) => {
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
 
-    if (downEvent.button == 2) return;
+    if (downEvent.button == 2) {
+      startTouch = false;
+      if (listYInterval) clearInterval(listYInterval);
+      if (pageXInterval) clearInterval(pageXInterval);
+      listYInterval = null;
+      pageXInterval = null;
+
+      upEventHandle();
+      return;
+    };
 
     sortableList = element.parentElement;
 
