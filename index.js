@@ -50,20 +50,14 @@ function elementCoisas(element) {
   });
 
   element.addEventListener("touchstart", (touchDownEvent) => {
-    startTouch = true;
     sortableList = element.parentElement;
     const touch = touchDownEvent.touches[0];
+    startTouch = true;
 
     setTimeout(() => {
       if (!startTouch) return;
 
-      touchDownEvent.preventDefault();
-      touchDownEvent.stopImmediatePropagation();
       downEventHandle(touch.pageX, touch.pageY, element);
-
-      sortableList.parentElement.addEventListener("wheel", (e) => {
-        e.preventDefault()
-      }, { passive: false })
     }, 500)
   })
 }
@@ -82,12 +76,10 @@ window.addEventListener("touchmove", (touchMoveEvent) => {
 
   const touch = touchMoveEvent.touches[0];
 
-  touchMoveEvent.preventDefault();
-  touchMoveEvent.stopImmediatePropagation();
-
   if (!selectedElement) return;
 
-  sortableList.parentElement.style.touchAction = "none";
+  touchMoveEvent.preventDefault();
+  touchMoveEvent.stopImmediatePropagation();
 
   moveEventHandle(touch.pageX, touch.pageY);
 })
@@ -101,20 +93,9 @@ window.addEventListener("mouseup", (upEvent) => {
   upEventHandle();
 });
 
-window.addEventListener("touchend", (touchEndEvent) => {
-  startTouch = false;
-
-  upEventHandle();
-
-  if (!selectedElement) return;
-
-  sortableList.parentElement.style.touchAction = "";
-  sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
-})
-
 window.addEventListener("touchend", () => {
-  sortableList.parentElement.style.touchAction = "";
-  sortableList.parentElement.removeEventListener("wheel", () => { }, { passive: false });
+  startTouch = false;
+  upEventHandle();
 })
 
 const changeList = (x, preventScroll) => {
