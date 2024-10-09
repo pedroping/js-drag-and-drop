@@ -186,7 +186,9 @@ const downEventHandle = (x, y, element) => {
       }, 0);
     });
 
+  const firstElementWidth = sortableList.children[0].offsetWidth;
   sortableList.insertBefore(previewElement, selectedElement);
+  previewElement.style.width = firstElementWidth + 'px';
 
   const previewIsFirst = getIsPreviewFirst();
 
@@ -202,7 +204,10 @@ const moveEventHandle = (x, y) => {
 
   const afterElement = getDragAfterElement(y);
   previewElement.style.transition = 'none';
+  const firstElementWidth = sortableList.children[0].offsetWidth;
   sortableList.insertBefore(previewElement, afterElement);
+  previewElement.style.width = firstElementWidth + 'px';
+
   const previewIsFirst = getIsPreviewFirst();
 
   const previewElementId = Array.from(sortableList.children)
@@ -323,6 +328,7 @@ const upEventHandle = () => {
       sortableList.insertBefore(cloneElement, afterElement);
 
       cloneElement.style.position = "static";
+      cloneElement.style.width = '100%';
 
       if (sortableList.contains(previewElement))
         sortableList.removeChild(previewElement);
@@ -356,7 +362,10 @@ const createPageXInterval = (move) => {
 
     const afterElement = getDragAfterElement(actualYPosition);
 
+    const firstElementWidth = sortableList.children[0].offsetWidth;
     sortableList.insertBefore(previewElement, afterElement);
+    previewElement.style.width = firstElementWidth + 'px';
+
     const previewIsFirst = getIsPreviewFirst();
 
     const previewElementId = Array.from(sortableList.children)
@@ -383,7 +392,9 @@ const createListYInterval = (move) => {
 
     const afterElement = getDragAfterElement(actualYPosition);
 
+    const firstElementWidth = sortableList.children[0].offsetWidth;
     sortableList.insertBefore(previewElement, afterElement);
+    previewElement.style.width = firstElementWidth + 'px';
     const previewIsFirst = getIsPreviewFirst();
 
     const previewElementId = Array.from(sortableList.children)
