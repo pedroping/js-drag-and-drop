@@ -1,5 +1,8 @@
 const sortableLists = document.querySelectorAll("#sortable");
+const pageContent = document.getElementById('page-content');
 const previewElement = document.createElement("li");
+const mainElement = document.querySelector('main');
+
 previewElement.classList.add("preview");
 
 let initialX;
@@ -14,6 +17,10 @@ let actualXPosition = 0;
 let intervalPageXValue = 2;
 let intervalListYValue = 2;
 let preventListener = false;
+
+let startX = 0;
+let scrollLeft = 0;
+let mouseDown = false;
 
 Array.from(sortableLists).forEach(sortable => {
   listCoisas(sortable)
@@ -101,7 +108,7 @@ window.addEventListener("touchend", () => {
 const changeList = (x, preventScroll) => {
   const list = Array.from(sortableLists).find(list => {
     const rect = list.getBoundingClientRect();
-    return x > rect.left - (preventScroll ? 0 : document.body.scrollLeft) - 20 && x < (rect.right + 20 - (preventScroll ? 0 : document.body.scrollLeft))
+    return x > rect.left - (preventScroll ? 0 : pageContent.scrollLeft) - 20 && x < (rect.right + 20 - (preventScroll ? 0 : pageContent.scrollLeft))
   })
 
   if (!list || list == sortableList) return;
@@ -357,8 +364,8 @@ const upEventHandle = () => {
 
 const createPageXInterval = (move) => {
   return setInterval(() => {
-    document.body.scrollLeft += move;
-    changeList(actualXPosition - document.body.scrollLeft);
+    pageContent.scrollLeft += move;
+    changeList(actualXPosition - pageContent.scrollLeft);
 
     const afterElement = getDragAfterElement(actualYPosition);
 
@@ -440,3 +447,29 @@ const getDragAfterElement = (y) => {
     }
   ).element;
 };
+
+// Move page with mouse
+
+document.addEventListener('mousedown', (event) => {
+  mouseDown = true;
+  startX = event.pageX - pageContent.offsetLeft;
+  scrollLeft = pageContent.scrollLeft;
+})
+
+document.addEventListener('mousemove', (event) => {
+  if (selectedElement || !mouseDown) return;
+
+  const x = event.pageX - document.body.scrollLeft;
+  const scroll = x - startX;
+
+  pageContent.scrollLeft = scrollLeft - scroll;
+})
+
+
+document.addEventListener('mouseup', () => {
+  mouseDown = false;
+})
+document.addEventListener('mouseleave', () => {
+  mouseDown = false;
+})
+
