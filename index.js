@@ -394,7 +394,7 @@ const createPageXInterval = (move) => {
 
 const createListYInterval = (move) => {
   return setInterval(() => {
-    sortableList.parentElement.scrollTop += move;
+    sortableList.parentElement.parentElement.scrollTop += move;
 
     const afterElement = getDragAfterElement(actualYPosition);
 
@@ -421,8 +421,6 @@ const createListYInterval = (move) => {
   }, 10);
 };
 
-const getIsPreviewFirst = () => Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
-
 const getDragAfterElement = (y) => {
   const draggableElements = Array.from(sortableList.children).filter(
     (el) => el != selectedElement && el != previewElement
@@ -446,6 +444,8 @@ const getDragAfterElement = (y) => {
     }
   ).element;
 };
+
+const getIsPreviewFirst = () => Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
 
 // Move page with mouse
 

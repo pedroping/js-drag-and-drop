@@ -7,7 +7,8 @@ html {
   overscroll-behavior: none;
 }
 
-body, main {
+body,
+main {
   height: 100%;
   display: block;
   width: 100vw;
@@ -29,9 +30,29 @@ body, main {
   margin: 0;
 }
 
-.sortable-list {
-  width: 300px;
+.list {
+  display: flex;
+  flex-direction: column;
+  height: min-content;
+  max-height: 100%;
+  padding: 20px 5px;
+  border-radius: 10px;
   min-width: 300px;
+  background-color: lightgray;
+}
+
+.header {
+  padding: 5px;
+}
+
+.content {
+  height: 100%;
+  overflow: auto;
+  max-height: 100%;
+}
+
+.sortable-list {
+  width: 100%;
   overflow: auto;
   height: 100%;
 }
@@ -57,7 +78,7 @@ li {
 }
 
 .preview {
-  background-color: lightgray;
+  background-color: gray;
   padding: 0px;
   height: 40px;
   position: absolute;
