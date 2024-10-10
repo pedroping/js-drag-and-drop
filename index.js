@@ -10,6 +10,7 @@ let initialY;
 let sortableList;
 let listYInterval;
 let pageXInterval;
+let upStart = false;
 let selectedElement;
 let startTouch = false;
 let actualYPosition = 0;
@@ -39,6 +40,8 @@ function elementCoisas(element) {
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
 
+    if (upStart) return;
+
     if (downEvent.button == 2) {
       startTouch = false;
       if (listYInterval) clearInterval(listYInterval);
@@ -57,6 +60,8 @@ function elementCoisas(element) {
   });
 
   element.addEventListener("touchstart", (touchDownEvent) => {
+    if (upStart) return;
+
     sortableList = element.parentElement;
     const touch = touchDownEvent.touches[0];
     startTouch = true;
@@ -295,71 +300,65 @@ const upEventHandle = () => {
 
   if (!selectedElement) return;
 
+  upStart = true;
+
   const elementHeight = selectedElement.offsetHeight;
   const previewRect = previewElement.getBoundingClientRect();
 
-  const cloneElement = selectedElement;
+  Array.from(sortableList.children).filter(
+    (el) => el != selectedElement && el != previewElement
+  ).forEach(el => {
+    el.position = 'static';
+  });
 
-  let hasLeft = false;
-  let hasTop = false;
+  const cloneElement = selectedElement;
 
   preventListener = false;
 
-  cloneElement.addEventListener('transitionend', (e) => {
-    if (preventListener) return;
+  setTimeout(() => {
+    preventListener = true;
+    const afterElement = getDragAfterElement(actualYPosition);
+    selectedElement = null;
 
-    if (e.propertyName == 'left')
-      hasLeft = true;
+    if (cloneElement.parentElement != sortableList) {
+      const parentListHeight = +cloneElement.parentElement.getAttribute('height');
 
-    if (e.propertyName == 'top')
-      hasTop = true;
+      cloneElement.parentElement.setAttribute('height', parentListHeight - cloneElement.offsetHeight)
+      cloneElement.parentElement.style.height = parentListHeight - cloneElement.offsetHeight + 'px';
+      cloneElement.parentElement.style.minHeight = parentListHeight - cloneElement.offsetHeight + 'px';
 
-    if (hasLeft && hasTop) {
-      preventListener = true;
-      const afterElement = getDragAfterElement(actualYPosition);
-
-      if (cloneElement.parentElement != sortableList) {
-        const parentListHeight = +cloneElement.parentElement.getAttribute('height');
-
-        cloneElement.parentElement.setAttribute('height', parentListHeight - cloneElement.offsetHeight)
-        cloneElement.parentElement.style.height = parentListHeight - cloneElement.offsetHeight + 'px';
-        cloneElement.parentElement.style.minHeight = parentListHeight - cloneElement.offsetHeight + 'px';
-
-        const newListHeight = +sortableList.getAttribute('height');
-        sortableList.setAttribute('height', newListHeight + cloneElement.offsetHeight + 5);
-        sortableList.style.height = newListHeight + cloneElement.offsetHeight + 5 + 'px';
-        sortableList.style.minHeight = newListHeight + cloneElement.offsetHeight + 5 + 'px';
-      }
-
-      sortableList.appendChild(cloneElement);
-      sortableList.insertBefore(cloneElement, afterElement);
-
-      cloneElement.style.position = "static";
-      cloneElement.style.width = '100%';
-
-      if (sortableList.contains(previewElement))
-        sortableList.removeChild(previewElement);
-
-      if (!afterElement)
-        sortableList.parentElement.scrollTop += elementHeight;
-
-      Array.from(sortableList.children).forEach((listElement) => {
-        listElement.style.transition = "all 200ms ease-in-out";
-        listElement.style.transition = "none";
-        listElement.style.transform = "translateY(0px)";
-      });
-
-      cloneElement.style.zIndex = "2";
-      cloneElement.removeEventListener('transitionend', () => { }, { capture: true });
-      return;
+      const newListHeight = +sortableList.getAttribute('height');
+      sortableList.setAttribute('height', newListHeight + cloneElement.offsetHeight + 5);
+      sortableList.style.height = newListHeight + cloneElement.offsetHeight + 5 + 'px';
+      sortableList.style.minHeight = newListHeight + cloneElement.offsetHeight + 5 + 'px';
     }
-  })
+
+    sortableList.insertBefore(cloneElement, afterElement);
+
+    cloneElement.style.position = "static";
+    cloneElement.style.width = '100%';
+
+    if (sortableList.contains(previewElement))
+      sortableList.removeChild(previewElement);
+
+    if (!afterElement)
+      sortableList.parentElement.scrollTop += elementHeight;
+
+    Array.from(sortableList.children).forEach((listElement) => {
+      listElement.style.transition = "all 200ms ease-in-out";
+      listElement.style.transition = "none";
+      listElement.style.transform = "translateY(0px)";
+    });
+
+    cloneElement.style.zIndex = "2";
+    cloneElement.removeEventListener('transitionend', () => { }, { capture: true });
+    upStart = false;
+  }, 400)
 
   previewElement.style.opacity = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
   selectedElement.style.top = Math.floor(previewRect.top) - 5 + "px";
   selectedElement.style.left = Math.floor(previewRect.left) + "px";
-  selectedElement = null;
 }
 
 const createPageXInterval = (move) => {
@@ -464,7 +463,6 @@ document.addEventListener('mousemove', (event) => {
 
   pageContent.scrollLeft = scrollLeft - scroll;
 })
-
 
 document.addEventListener('mouseup', () => {
   mouseDown = false;
