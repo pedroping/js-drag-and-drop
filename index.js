@@ -191,7 +191,7 @@ const downEventHandle = (x, y, element) => {
     .filter((el) => el != selectedElement && el != previewElement)
     .forEach((listElement, id) => {
 
-      listElement.style.transform = id > previewElementId - 1 ? "translateY(45px)" : "";
+      listElement.style.transform = id > previewElementId - 1 ? "translateY(43px)" : "";
 
       setTimeout(() => {
         listElement.style.transition = "all 200ms ease-in-out";
@@ -204,7 +204,7 @@ const downEventHandle = (x, y, element) => {
 
   const previewIsFirst = getIsPreviewFirst();
 
-  if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
+  previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
 }
 
 const moveEventHandle = (x, y) => {
@@ -230,18 +230,20 @@ const moveEventHandle = (x, y) => {
     .filter((el) => el != selectedElement)
     .forEach((listElement, id) => {
       if (id > previewElementId) {
-        listElement.style.transform = "translateY(45px)";
+        listElement.style.transform = "translateY(43px)";
       } else {
         listElement.style.transform = "";
       }
     });
 
-  if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
+  previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
 
   selectedElement.style.top = y - initialY + "px";
   selectedElement.style.left = x - initialX + "px";
 
-  if (y < sortableList.parentElement.offsetHeight / 5) {
+  const listHeight = sortableList.parentElement.parentElement.offsetHeight;
+
+  if (y < listHeight / 5) {
     if (listYInterval && intervalListYValue == -2) return;
 
     if (listYInterval) clearInterval(listYInterval);
@@ -251,7 +253,7 @@ const moveEventHandle = (x, y) => {
     return;
   }
 
-  if (y > sortableList.parentElement.offsetHeight - sortableList.parentElement.offsetHeight / 5) {
+  if (y > listHeight - listHeight / 5) {
     if (listYInterval && intervalListYValue == 2) return;
 
     if (listYInterval) clearInterval(listYInterval);
@@ -301,6 +303,7 @@ const upEventHandle = () => {
   if (!selectedElement) return;
 
   upStart = true;
+  const previewIsFirst = getIsPreviewFirst();
 
   const elementHeight = selectedElement.offsetHeight;
   const previewRect = previewElement.getBoundingClientRect();
@@ -357,7 +360,7 @@ const upEventHandle = () => {
 
   previewElement.style.opacity = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
-  selectedElement.style.top = Math.floor(previewRect.top) - 5 + "px";
+  selectedElement.style.top = Math.floor(previewRect.top) - (previewIsFirst ? 5 : 4) + "px";
   selectedElement.style.left = Math.floor(previewRect.left) + "px";
 }
 
@@ -382,13 +385,13 @@ const createPageXInterval = (move) => {
       .filter((el) => el != selectedElement)
       .forEach((listElement, id) => {
         if (id > previewElementId) {
-          listElement.style.transform = "translateY(45px)";
+          listElement.style.transform = "translateY(43px)";
         } else {
           listElement.style.transform = "";
         }
       });
 
-    if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
+    previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
   }, 10)
 }
 
@@ -411,13 +414,13 @@ const createListYInterval = (move) => {
       .filter((el) => el != selectedElement)
       .forEach((listElement, id) => {
         if (id > previewElementId) {
-          listElement.style.transform = "translateY(45px)";
+          listElement.style.transform = "translateY(43px)";
         } else {
           listElement.style.transform = "";
         }
       });
 
-    if (previewIsFirst) previewElement.style.transform = "translateY(5px)";
+    previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
   }, 10);
 };
 
