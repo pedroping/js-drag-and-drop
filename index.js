@@ -191,7 +191,7 @@ const downEventHandle = (x, y, element) => {
     .filter((el) => el != selectedElement && el != previewElement)
     .forEach((listElement, id) => {
 
-      listElement.style.transform = id > previewElementId - 1 ? "translateY(43px)" : "";
+      listElement.style.transform = id > previewElementId - 1 ? "translateY(44px)" : "";
 
       setTimeout(() => {
         listElement.style.transition = "all 200ms ease-in-out";
@@ -219,6 +219,7 @@ const moveEventHandle = (x, y) => {
   const firstElementWidth = sortableList.children[0].offsetWidth;
   sortableList.insertBefore(previewElement, afterElement);
   previewElement.style.width = firstElementWidth + 'px';
+  selectedElement.style.width = firstElementWidth + 'px';
 
   const previewIsFirst = getIsPreviewFirst();
 
@@ -230,7 +231,7 @@ const moveEventHandle = (x, y) => {
     .filter((el) => el != selectedElement)
     .forEach((listElement, id) => {
       if (id > previewElementId) {
-        listElement.style.transform = "translateY(43px)";
+        listElement.style.transform = "translateY(44px)";
       } else {
         listElement.style.transform = "";
       }
@@ -374,6 +375,7 @@ const createPageXInterval = (move) => {
     const firstElementWidth = sortableList.children[0].offsetWidth;
     sortableList.insertBefore(previewElement, afterElement);
     previewElement.style.width = firstElementWidth + 'px';
+    selectedElement.style.width = firstElementWidth + 'px';
 
     const previewIsFirst = getIsPreviewFirst();
 
@@ -385,7 +387,7 @@ const createPageXInterval = (move) => {
       .filter((el) => el != selectedElement)
       .forEach((listElement, id) => {
         if (id > previewElementId) {
-          listElement.style.transform = "translateY(43px)";
+          listElement.style.transform = "translateY(44px)";
         } else {
           listElement.style.transform = "";
         }
@@ -404,6 +406,7 @@ const createListYInterval = (move) => {
     const firstElementWidth = sortableList.children[0].offsetWidth;
     sortableList.insertBefore(previewElement, afterElement);
     previewElement.style.width = firstElementWidth + 'px';
+    selectedElement.style.width = firstElementWidth + 'px';
     const previewIsFirst = getIsPreviewFirst();
 
     const previewElementId = Array.from(sortableList.children)
@@ -414,7 +417,7 @@ const createListYInterval = (move) => {
       .filter((el) => el != selectedElement)
       .forEach((listElement, id) => {
         if (id > previewElementId) {
-          listElement.style.transform = "translateY(43px)";
+          listElement.style.transform = "translateY(44px)";
         } else {
           listElement.style.transform = "";
         }
