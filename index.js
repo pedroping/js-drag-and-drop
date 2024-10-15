@@ -394,7 +394,7 @@ const createPageXInterval = (move) => {
       });
 
     previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
-  }, 10)
+  }, 2)
 }
 
 const createListYInterval = (move) => {
