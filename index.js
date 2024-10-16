@@ -357,12 +357,29 @@ const upEventHandle = () => {
     cloneElement.style.zIndex = "2";
     cloneElement.removeEventListener('transitionend', () => { }, { capture: true });
     upStart = false;
+
+    resizeAllLists();
   }, 400)
 
   previewElement.style.opacity = "0";
   selectedElement.style.transition = "all 200ms ease-in-out";
   selectedElement.style.top = Math.floor(previewRect.top) - (previewIsFirst ? 5 : 4) + "px";
   selectedElement.style.left = Math.floor(previewRect.left) + "px";
+}
+
+const resizeAllLists = () => {
+  Array.from(sortableLists).forEach(sortable => {
+    const allCardsHeight = Array.from(sortable.children).reduce((curr, prev) => {
+      const height = prev.getBoundingClientRect().height;
+      return curr + height + 5;
+    }, 0)
+
+    const totalHeight = Math.floor(allCardsHeight) + 10;
+
+    sortable.style.height = totalHeight + 'px';
+    sortable.setAttribute('height', totalHeight);
+    sortable.style.minHeight = totalHeight + 'px';
+  })
 }
 
 const createPageXInterval = (move) => {
