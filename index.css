@@ -15,17 +15,18 @@ main {
   overflow: hidden;
 }
 
-main {
-  padding: 0px 20px;
-}
-
 .page-content {
-  display: flex;
-  gap: 20px;
-  padding: 10px 0px;
+  padding: 20px;
+  padding-bottom: 10px;
   overflow: auto;
   height: 100%;
   position: relative;
+}
+
+.all-lists {
+  display: flex;
+  gap: 20px;
+  height: 100%;
 }
 
 * {
@@ -44,7 +45,7 @@ main {
   min-width: 300px;
   background-color: lightgray;
   z-index: 1;
-  transition: all 20000ms ease-in-out;
+  transition: all 200ms ease-in-out;
 }
 
 .header {
@@ -97,5 +98,5 @@ li {
 .preview-list {
   position: absolute;
   z-index: 0;
-  transition: n;
-} 
+  background-color: #7c7c7c;
+}

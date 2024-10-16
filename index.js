@@ -28,8 +28,13 @@ let mouseDown = false;
 
 let initialListX;
 let initialListY;
+let listStartTouch;
 let selectedMoveList;
 let actualListXPosition = 0;
+
+const allLists = pageContent.childNodes[1];
+allLists.style.minWidth = Array.from(allLists.children).length * 320 + 'px'
+
 
 Array.from(sortableLists).forEach(sortable => {
   listCoisas(sortable)
@@ -54,6 +59,17 @@ function listCoisas(listElement) {
 
     listDownEventHandle(downEvent.clientX, downEvent.clientY, listParent)
   });
+
+  headerElement.addEventListener("touchstart", (touchDownEvent) => {
+    startTouch = true;
+    const touch = touchDownEvent.touches[0];
+
+    setTimeout(() => {
+      if (!startTouch) return;
+
+      listDownEventHandle(touch.pageX, touch.pageY, listParent);
+    }, 500)
+  })
 }
 
 const listDownEventHandle = (x, y, element) => {
@@ -61,11 +77,7 @@ const listDownEventHandle = (x, y, element) => {
 
   const listRect = selectedMoveList.getBoundingClientRect();
 
-  Array.from(pageContent.children).forEach(element => element.style.transition = "none");
-
-  const pageWidth = pageContent.offsetWidth;
-
-  pageContent.style.minWidth = pageWidth + 'px';
+  Array.from(allLists.children).forEach(element => element.style.transition = "none");
 
   selectedMoveList.style.top = "unset";
   selectedMoveList.style.left = "unset";
@@ -75,6 +87,7 @@ const listDownEventHandle = (x, y, element) => {
   selectedMoveList.style.height = listRect.height + 'px';
   selectedMoveList.style.width = listRect.width + 'px';
   selectedMoveList.style.transform = 'rotate(2deg)';
+  selectedMoveList.style.opacity = '0.2'
 
   listPreviewElement.style.height = listRect.height + 'px';
   listPreviewElement.style.width = listRect.width + 'px';
@@ -86,48 +99,50 @@ const listDownEventHandle = (x, y, element) => {
   selectedMoveList.style.top = y - initialListY + "px";
   selectedMoveList.style.left = x - initialListX + "px";
 
-  const dragAfterListElementId = Array.from(pageContent.children)
+  const dragAfterListElementId = Array.from(allLists.children)
     .filter(el => el != listPreviewElement)
     .findIndex(el => el == selectedMoveList)
 
-  Array.from(pageContent.children)
+  Array.from(allLists.children)
     .filter(el => el != selectedMoveList && el != listPreviewElement)
     .forEach((element, id) => {
       element.style.transform = id > dragAfterListElementId - 1 ? "translateX(320px)" : "";
 
       setTimeout(() => {
-        element.style.transition = "all 20000ms ease-in-out";
+        if (window.innerWidth >= 600)
+          element.style.transition = "all 200ms ease-in-out";
       }, 0);
     })
 
-  pageContent.insertBefore(listPreviewElement, selectedMoveList);
+  allLists.insertBefore(listPreviewElement, selectedMoveList);
   listPreviewElement.style.transform = `translateX(${dragAfterListElementId > 0 ? 320 * dragAfterListElementId : 0}px)`
 }
 
 const listMoveEventHandle = (x, y) => {
+  actualListXPosition = x;
+
   selectedMoveList.style.top = y - initialListY + "px";
   selectedMoveList.style.left = x - initialListX + "px";
 
+  handlePageXInterval(x, true);
+
   const afterElement = getDragAfterListElement(x);
 
-  const dragAfterListElementId = Array.from(pageContent.children)
+  const dragAfterListElementId = Array.from(allLists.children)
     .filter(el => el != listPreviewElement && el != selectedMoveList)
     .findIndex(el => el == afterElement)
 
-  if (dragAfterListElementId != -1)
-    Array.from(pageContent.children)
-      .filter(el => el != selectedMoveList && el != listPreviewElement)
-      .forEach((element, id) => {
-        element.style.transform = id > dragAfterListElementId - 1 ? "translateX(320px)" : "";
-      })
+  Array.from(allLists.children)
+    .filter(el => el != selectedMoveList && el != listPreviewElement)
+    .forEach((element, id) => {
+      element.style.transform = id > dragAfterListElementId - 1 && dragAfterListElementId != -1 ? "translateX(320px)" : "";
+    })
 
-  console.log(dragAfterListElementId, x);
-
-  pageContent.insertBefore(listPreviewElement, afterElement)
+  allLists.insertBefore(listPreviewElement, afterElement)
   if (dragAfterListElementId != -1)
     listPreviewElement.style.transform = `translateX(${dragAfterListElementId > 0 ? 320 * dragAfterListElementId : 0}px)`
   else {
-    const lenght = Array.from(pageContent.children)
+    const lenght = Array.from(allLists.children)
       .filter(el => el != selectedMoveList && el != listPreviewElement).length;
 
     listPreviewElement.style.transform = `translateX(${320 * lenght}px)`
@@ -193,10 +208,18 @@ window.addEventListener("mousemove", (moveEvent) => {
 window.addEventListener("touchmove", (touchMoveEvent) => {
   startTouch = false;
 
-  const touch = touchMoveEvent.touches[0];
+  if (selectedMoveList) {
+    const touch = touchMoveEvent.touches[0];
+
+    touchMoveEvent.preventDefault();
+    touchMoveEvent.stopImmediatePropagation();
+    listMoveEventHandle(touch.pageX, touch.pageY);
+    return;
+  }
 
   if (!selectedElement) return;
 
+  const touch = touchMoveEvent.touches[0];
   touchMoveEvent.preventDefault();
   touchMoveEvent.stopImmediatePropagation();
 
@@ -379,7 +402,7 @@ const moveEventHandle = (x, y) => {
   listYInterval = null;
 }
 
-const handlePageXInterval = (x) => {
+const handlePageXInterval = (x, isList) => {
   if (x < window.innerWidth / 4) {
     if (pageXInterval && intervalPageXValue == -2) return;
 
@@ -387,7 +410,7 @@ const handlePageXInterval = (x) => {
 
     intervalPageXValue = -2;
 
-    pageXInterval = createPageXInterval(intervalPageXValue);
+    pageXInterval = createPageXInterval(intervalPageXValue, isList);
     return;
   }
 
@@ -398,7 +421,7 @@ const handlePageXInterval = (x) => {
 
     intervalPageXValue = 2;
 
-    pageXInterval = createPageXInterval(intervalPageXValue);
+    pageXInterval = createPageXInterval(intervalPageXValue, isList);
     return;
   }
 
@@ -495,9 +518,36 @@ const resizeAllLists = () => {
   })
 }
 
-const createPageXInterval = (move) => {
+const createPageXInterval = (move, isList) => {
   return setInterval(() => {
     pageContent.scrollLeft += move;
+
+    if (isList) {
+      const afterElement = getDragAfterListElement(actualListXPosition);
+
+      const dragAfterListElementId = Array.from(allLists.children)
+        .filter(el => el != listPreviewElement && el != selectedMoveList)
+        .findIndex(el => el == afterElement)
+
+      Array.from(allLists.children)
+        .filter(el => el != selectedMoveList && el != listPreviewElement)
+        .forEach((element, id) => {
+          element.style.transform = id > dragAfterListElementId - 1 && dragAfterListElementId != -1 ? "translateX(320px)" : "";
+        })
+
+      allLists.insertBefore(listPreviewElement, afterElement)
+      if (dragAfterListElementId != -1)
+        listPreviewElement.style.transform = `translateX(${dragAfterListElementId > 0 ? 320 * dragAfterListElementId : 0}px)`
+      else {
+        const lenght = Array.from(allLists.children)
+          .filter(el => el != selectedMoveList && el != listPreviewElement).length;
+
+        listPreviewElement.style.transform = `translateX(${320 * lenght}px)`
+      }
+
+      return;
+    }
+
     changeList(actualXPosition - pageContent.scrollLeft);
 
     const afterElement = getDragAfterElement(actualYPosition);
@@ -582,13 +632,13 @@ const getDragAfterElement = (y) => {
 };
 
 const getDragAfterListElement = (x) => {
-  const draggableElements = Array.from(pageContent.children)
+  const draggableElements = Array.from(allLists.children)
     .filter(el => el != selectedMoveList && el != listPreviewElement)
 
   return draggableElements.reduce(
     (closest, child) => {
       const box = child.getBoundingClientRect();
-      const offset = x - box.left - box.width / 4;
+      const offset = x - box.left - box.width / 2;
 
       if (offset < 0 && offset > closest.offset) {
         return {
