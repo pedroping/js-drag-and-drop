@@ -15,13 +15,17 @@ main {
   overflow: hidden;
 }
 
+main {
+  padding: 0px 20px;
+}
+
 .page-content {
   display: flex;
   gap: 20px;
-  padding-bottom: 10px;
-  padding: 20px;
+  padding: 10px 0px;
   overflow: auto;
   height: 100%;
+  position: relative;
 }
 
 * {
@@ -39,11 +43,14 @@ main {
   border-radius: 10px;
   min-width: 300px;
   background-color: lightgray;
+  z-index: 1;
+  transition: all 20000ms ease-in-out;
 }
 
 .header {
   padding: 5px;
   user-select: none;
+  cursor: grab;
 }
 
 .content {
@@ -86,3 +93,9 @@ li {
   z-index: 0;
   margin: 0px;
 }
+
+.preview-list {
+  position: absolute;
+  z-index: 0;
+  transition: n;
+} 

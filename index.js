@@ -1,9 +1,12 @@
 const sortableLists = document.querySelectorAll("#sortable");
 const pageContent = document.getElementById('page-content');
 const previewElement = document.createElement("li");
+const listPreviewElement = document.createElement('div');
 const mainElement = document.querySelector('main');
 
 previewElement.classList.add("preview");
+listPreviewElement.classList.add('list');
+listPreviewElement.classList.add('preview-list');
 
 let initialX;
 let initialY;
@@ -23,6 +26,11 @@ let startX = 0;
 let scrollLeft = 0;
 let mouseDown = false;
 
+let initialListX;
+let initialListY;
+let selectedMoveList;
+let actualListXPosition = 0;
+
 Array.from(sortableLists).forEach(sortable => {
   listCoisas(sortable)
 
@@ -33,6 +41,97 @@ Array.from(sortableLists).forEach(sortable => {
 
 function listCoisas(listElement) {
   listElement.setAttribute('height', listElement.offsetHeight);
+
+  const listParent = listElement.parentElement.parentElement.parentElement
+
+  const headerElement = listParent.querySelector('.header');
+
+  headerElement.addEventListener("mousedown", (downEvent) => {
+    downEvent.preventDefault();
+    downEvent.stopImmediatePropagation();
+
+    startTouch = true;
+
+    listDownEventHandle(downEvent.clientX, downEvent.clientY, listParent)
+  });
+}
+
+const listDownEventHandle = (x, y, element) => {
+  selectedMoveList = element;
+
+  const listRect = selectedMoveList.getBoundingClientRect();
+
+  Array.from(pageContent.children).forEach(element => element.style.transition = "none");
+
+  const pageWidth = pageContent.offsetWidth;
+
+  pageContent.style.minWidth = pageWidth + 'px';
+
+  selectedMoveList.style.top = "unset";
+  selectedMoveList.style.left = "unset";
+  selectedMoveList.style.position = "fixed";
+  selectedMoveList.style.zIndex = "2";
+  selectedMoveList.style.transition = "none";
+  selectedMoveList.style.height = listRect.height + 'px';
+  selectedMoveList.style.width = listRect.width + 'px';
+  selectedMoveList.style.transform = 'rotate(2deg)';
+
+  listPreviewElement.style.height = listRect.height + 'px';
+  listPreviewElement.style.width = listRect.width + 'px';
+
+  actualListXPosition = x;
+  initialListX = x - listRect.x;
+  initialListY = y - listRect.y;
+
+  selectedMoveList.style.top = y - initialListY + "px";
+  selectedMoveList.style.left = x - initialListX + "px";
+
+  const dragAfterListElementId = Array.from(pageContent.children)
+    .filter(el => el != listPreviewElement)
+    .findIndex(el => el == selectedMoveList)
+
+  Array.from(pageContent.children)
+    .filter(el => el != selectedMoveList && el != listPreviewElement)
+    .forEach((element, id) => {
+      element.style.transform = id > dragAfterListElementId - 1 ? "translateX(320px)" : "";
+
+      setTimeout(() => {
+        element.style.transition = "all 20000ms ease-in-out";
+      }, 0);
+    })
+
+  pageContent.insertBefore(listPreviewElement, selectedMoveList);
+  listPreviewElement.style.transform = `translateX(${dragAfterListElementId > 0 ? 320 * dragAfterListElementId : 0}px)`
+}
+
+const listMoveEventHandle = (x, y) => {
+  selectedMoveList.style.top = y - initialListY + "px";
+  selectedMoveList.style.left = x - initialListX + "px";
+
+  const afterElement = getDragAfterListElement(x);
+
+  const dragAfterListElementId = Array.from(pageContent.children)
+    .filter(el => el != listPreviewElement && el != selectedMoveList)
+    .findIndex(el => el == afterElement)
+
+  if (dragAfterListElementId != -1)
+    Array.from(pageContent.children)
+      .filter(el => el != selectedMoveList && el != listPreviewElement)
+      .forEach((element, id) => {
+        element.style.transform = id > dragAfterListElementId - 1 ? "translateX(320px)" : "";
+      })
+
+  console.log(dragAfterListElementId, x);
+
+  pageContent.insertBefore(listPreviewElement, afterElement)
+  if (dragAfterListElementId != -1)
+    listPreviewElement.style.transform = `translateX(${dragAfterListElementId > 0 ? 320 * dragAfterListElementId : 0}px)`
+  else {
+    const lenght = Array.from(pageContent.children)
+      .filter(el => el != selectedMoveList && el != listPreviewElement).length;
+
+    listPreviewElement.style.transform = `translateX(${320 * lenght}px)`
+  }
 }
 
 function elementCoisas(element) {
@@ -75,6 +174,14 @@ function elementCoisas(element) {
 }
 
 window.addEventListener("mousemove", (moveEvent) => {
+  if (selectedMoveList) {
+    moveEvent.preventDefault();
+    moveEvent.stopImmediatePropagation();
+    listMoveEventHandle(moveEvent.x, moveEvent.y);
+
+    return;
+  }
+
   if (!selectedElement || !startTouch) return;
 
   moveEvent.preventDefault();
@@ -101,6 +208,8 @@ window.addEventListener("mouseup", (upEvent) => {
 
   upEvent.preventDefault();
   upEvent.stopImmediatePropagation();
+
+  selectedMoveList = undefined;
 
   upEventHandle();
 });
@@ -171,6 +280,8 @@ const downEventHandle = (x, y, element) => {
   selectedElement.style.zIndex = "2";
   selectedElement.style.width = rect.width + "px";
   selectedElement.style.transition = "none";
+
+  selectedElement.parentElement.parentElement.parentElement.parentElement.style.zIndex = '10';
 
   previewElement.style.display = "block";
   previewElement.style.width = rect.width + "px";
@@ -337,6 +448,8 @@ const upEventHandle = () => {
       sortableList.style.minHeight = newListHeight + cloneElement.offsetHeight + 5 + 'px';
     }
 
+    cloneElement.parentElement.parentElement.parentElement.parentElement.style.zIndex = '1';
+
     sortableList.insertBefore(cloneElement, afterElement);
 
     cloneElement.style.position = "static";
@@ -467,6 +580,30 @@ const getDragAfterElement = (y) => {
     }
   ).element;
 };
+
+const getDragAfterListElement = (x) => {
+  const draggableElements = Array.from(pageContent.children)
+    .filter(el => el != selectedMoveList && el != listPreviewElement)
+
+  return draggableElements.reduce(
+    (closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = x - box.left - box.width / 4;
+
+      if (offset < 0 && offset > closest.offset) {
+        return {
+          offset: offset,
+          element: child,
+        };
+      } else {
+        return closest;
+      }
+    },
+    {
+      offset: Number.NEGATIVE_INFINITY,
+    }
+  ).element;
+}
 
 const getIsPreviewFirst = () => Array.from(sortableList.children).filter((el) => el != selectedElement).findIndex(element => element == previewElement) == 0;
 
