@@ -20,12 +20,12 @@ let actualYPosition = 0;
 let actualXPosition = 0;
 let intervalPageXValue = 2;
 let intervalListYValue = 2;
-let preventListener = false;
 
 let startX = 0;
 let scrollLeft = 0;
 let mouseDown = false;
 
+let listUpStart;
 let initialListX;
 let initialListY;
 let listStartTouch;
@@ -52,6 +52,8 @@ function listCoisas(listElement) {
   const headerElement = listParent.querySelector('.header');
 
   headerElement.addEventListener("mousedown", (downEvent) => {
+    if (listUpStart) return;
+
     downEvent.preventDefault();
     downEvent.stopImmediatePropagation();
 
@@ -61,6 +63,8 @@ function listCoisas(listElement) {
   });
 
   headerElement.addEventListener("touchstart", (touchDownEvent) => {
+    if (listUpStart) return;
+
     startTouch = true;
     const touch = touchDownEvent.touches[0];
 
@@ -89,6 +93,7 @@ const listDownEventHandle = (x, y, element) => {
   selectedMoveList.style.transform = 'rotate(2deg)';
   selectedMoveList.style.opacity = '0.2'
 
+  listPreviewElement.style.opacity = '1';
   listPreviewElement.style.height = listRect.height + 'px';
   listPreviewElement.style.width = listRect.width + 'px';
 
@@ -120,6 +125,8 @@ const listDownEventHandle = (x, y, element) => {
 
 const listMoveEventHandle = (x, y) => {
   actualListXPosition = x;
+
+  if (!selectedMoveList) return;
 
   selectedMoveList.style.top = y - initialListY + "px";
   selectedMoveList.style.left = x - initialListX + "px";
@@ -232,15 +239,127 @@ window.addEventListener("mouseup", (upEvent) => {
   upEvent.preventDefault();
   upEvent.stopImmediatePropagation();
 
-  selectedMoveList = undefined;
+  if (selectedMoveList) return listUpEventHandle();
 
   upEventHandle();
 });
 
 window.addEventListener("touchend", () => {
   startTouch = false;
+  if (selectedMoveList) return listUpEventHandle();
   upEventHandle();
 })
+
+const listUpEventHandle = () => {
+  if (listYInterval) clearInterval(listYInterval);
+  if (pageXInterval) clearInterval(pageXInterval);
+  listYInterval = null;
+  pageXInterval = null;
+
+  if (!selectedMoveList) return;
+
+  listUpStart = true;
+  const clonedList = selectedMoveList;
+  selectedMoveList = null;
+  const previewRect = listPreviewElement.getBoundingClientRect();
+
+  Array.from(allLists.children)
+    .filter(el => el != clonedList && el != listPreviewElement).forEach(el => el.style.position = 'static');
+
+  setTimeout(() => {
+    allLists.insertBefore(clonedList, listPreviewElement)
+    allLists.removeChild(listPreviewElement);
+
+    clonedList.style.height = '';
+    clonedList.style.width = '';
+
+    Array.from(allLists.children).forEach(el => {
+      el.style.transition = 'none';
+      el.style.position = 'static';
+      el.style.transform = 'none';
+    });
+
+    listUpStart = false;
+  }, 400)
+
+  listPreviewElement.style.opacity = "0";
+  clonedList.style.transition = "all 200ms ease-in-out";
+  clonedList.style.opacity = '1'
+  clonedList.style.transform = 'rotate(0deg)';
+  clonedList.style.top = Math.floor(previewRect.top) + "px";
+  clonedList.style.left = Math.floor(previewRect.left) + "px";
+}
+
+const upEventHandle = () => {
+  if (listYInterval) clearInterval(listYInterval);
+  if (pageXInterval) clearInterval(pageXInterval);
+  listYInterval = null;
+  pageXInterval = null;
+
+  if (!selectedElement) return;
+
+  upStart = true;
+  const previewIsFirst = getIsPreviewFirst();
+
+  const elementHeight = selectedElement.offsetHeight;
+  const previewRect = previewElement.getBoundingClientRect();
+
+  Array.from(sortableList.children).filter(
+    (el) => el != selectedElement && el != previewElement
+  ).forEach(el => {
+    el.style.position = 'static';
+  });
+
+  const cloneElement = selectedElement;
+
+  setTimeout(() => {
+    const afterElement = getDragAfterElement(actualYPosition);
+    selectedElement = null;
+
+    if (cloneElement.parentElement != sortableList) {
+      const parentListHeight = +cloneElement.parentElement.getAttribute('height');
+
+      cloneElement.parentElement.setAttribute('height', parentListHeight - cloneElement.offsetHeight)
+      cloneElement.parentElement.style.height = parentListHeight - cloneElement.offsetHeight + 'px';
+      cloneElement.parentElement.style.minHeight = parentListHeight - cloneElement.offsetHeight + 'px';
+
+      const newListHeight = +sortableList.getAttribute('height');
+      sortableList.setAttribute('height', newListHeight + cloneElement.offsetHeight + 5);
+      sortableList.style.height = newListHeight + cloneElement.offsetHeight + 5 + 'px';
+      sortableList.style.minHeight = newListHeight + cloneElement.offsetHeight + 5 + 'px';
+    }
+
+    cloneElement.parentElement.parentElement.parentElement.parentElement.style.zIndex = '1';
+
+    sortableList.insertBefore(cloneElement, afterElement);
+
+    cloneElement.style.position = "static";
+    cloneElement.style.width = '100%';
+
+    if (sortableList.contains(previewElement))
+      sortableList.removeChild(previewElement);
+
+    if (!afterElement)
+      sortableList.parentElement.scrollTop += elementHeight;
+
+    Array.from(sortableList.children).forEach((listElement) => {
+      listElement.style.transition = "all 200ms ease-in-out";
+      listElement.style.transition = "none";
+      listElement.style.transform = "translateY(0px)";
+    });
+
+    cloneElement.style.zIndex = "2";
+    cloneElement.removeEventListener('transitionend', () => { }, { capture: true });
+    upStart = false;
+
+    resizeAllLists();
+  }, 400)
+
+  previewElement.style.opacity = "0";
+  selectedElement.style.transition = "all 200ms ease-in-out";
+  selectedElement.style.top = Math.floor(previewRect.top) - (previewIsFirst ? 5 : 4) + "px";
+  selectedElement.style.left = Math.floor(previewRect.left) + "px";
+}
 
 const changeList = (x, preventScroll) => {
   const list = Array.from(sortableLists).find(list => {
@@ -427,80 +546,6 @@ const handlePageXInterval = (x, isList) => {
 
   if (pageXInterval) clearInterval(pageXInterval);
   pageXInterval = null;
-}
-
-const upEventHandle = () => {
-  if (listYInterval) clearInterval(listYInterval);
-  if (pageXInterval) clearInterval(pageXInterval);
-  listYInterval = null;
-  pageXInterval = null;
-
-  if (!selectedElement) return;
-
-  upStart = true;
-  const previewIsFirst = getIsPreviewFirst();
-
-  const elementHeight = selectedElement.offsetHeight;
-  const previewRect = previewElement.getBoundingClientRect();
-
-  Array.from(sortableList.children).filter(
-    (el) => el != selectedElement && el != previewElement
-  ).forEach(el => {
-    el.position = 'static';
-  });
-
-  const cloneElement = selectedElement;
-
-  preventListener = false;
-
-  setTimeout(() => {
-    preventListener = true;
-    const afterElement = getDragAfterElement(actualYPosition);
-    selectedElement = null;
-
-    if (cloneElement.parentElement != sortableList) {
-      const parentListHeight = +cloneElement.parentElement.getAttribute('height');
-
-      cloneElement.parentElement.setAttribute('height', parentListHeight - cloneElement.offsetHeight)
-      cloneElement.parentElement.style.height = parentListHeight - cloneElement.offsetHeight + 'px';
-      cloneElement.parentElement.style.minHeight = parentListHeight - cloneElement.offsetHeight + 'px';
-
-      const newListHeight = +sortableList.getAttribute('height');
-      sortableList.setAttribute('height', newListHeight + cloneElement.offsetHeight + 5);
-      sortableList.style.height = newListHeight + cloneElement.offsetHeight + 5 + 'px';
-      sortableList.style.minHeight = newListHeight + cloneElement.offsetHeight + 5 + 'px';
-    }
-
-    cloneElement.parentElement.parentElement.parentElement.parentElement.style.zIndex = '1';
-
-    sortableList.insertBefore(cloneElement, afterElement);
-
-    cloneElement.style.position = "static";
-    cloneElement.style.width = '100%';
-
-    if (sortableList.contains(previewElement))
-      sortableList.removeChild(previewElement);
-
-    if (!afterElement)
-      sortableList.parentElement.scrollTop += elementHeight;
-
-    Array.from(sortableList.children).forEach((listElement) => {
-      listElement.style.transition = "all 200ms ease-in-out";
-      listElement.style.transition = "none";
-      listElement.style.transform = "translateY(0px)";
-    });
-
-    cloneElement.style.zIndex = "2";
-    cloneElement.removeEventListener('transitionend', () => { }, { capture: true });
-    upStart = false;
-
-    resizeAllLists();
-  }, 400)
-
-  previewElement.style.opacity = "0";
-  selectedElement.style.transition = "all 200ms ease-in-out";
-  selectedElement.style.top = Math.floor(previewRect.top) - (previewIsFirst ? 5 : 4) + "px";
-  selectedElement.style.left = Math.floor(previewRect.left) + "px";
 }
 
 const resizeAllLists = () => {
