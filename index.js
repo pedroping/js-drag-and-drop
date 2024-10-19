@@ -91,7 +91,7 @@ const listDownEventHandle = (x, y, element) => {
   selectedMoveList.style.height = listRect.height + 'px';
   selectedMoveList.style.width = listRect.width + 'px';
   selectedMoveList.style.transform = 'rotate(2deg)';
-  selectedMoveList.style.opacity = '0.2'
+  selectedMoveList.style.opacity = '0.5'
 
   listPreviewElement.style.opacity = '1';
   listPreviewElement.style.height = listRect.height + 'px';
@@ -356,6 +356,7 @@ const upEventHandle = () => {
   }, 400)
 
   previewElement.style.opacity = "0";
+  selectedElement.style.transform = "";
   selectedElement.style.transition = "all 200ms ease-in-out";
   selectedElement.style.top = Math.floor(previewRect.top) - (previewIsFirst ? 5 : 4) + "px";
   selectedElement.style.left = Math.floor(previewRect.left) + "px";
@@ -384,15 +385,15 @@ const changeList = (x, preventScroll) => {
     })
 
   if (elementList != list) {
-    const elementHeight = selectedElement.getBoundingClientRect().height;
+    const elementHeight = Math.floor(selectedElement.getBoundingClientRect().height - 9);
 
     const oldHeight = +sortableList.getAttribute('height')
-    sortableList.style.minHeight = oldHeight + elementHeight + 5 + 'px';
-    sortableList.style.height = oldHeight + elementHeight + 5 + 'px';
+    sortableList.style.minHeight = oldHeight + elementHeight + 'px';
+    sortableList.style.height = oldHeight + elementHeight + 'px';
 
     const parentListHeight = +selectedElement.parentElement.getAttribute('height');
-    selectedElement.parentElement.style.minHeight = parentListHeight - selectedElement.offsetHeight + 'px';
-    selectedElement.parentElement.style.height = parentListHeight - selectedElement.offsetHeight + 'px';
+    selectedElement.parentElement.style.minHeight = parentListHeight - elementHeight + 'px';
+    selectedElement.parentElement.style.height = parentListHeight - elementHeight + 'px';
 
     Array.from(sortableList.children).filter(el => el != previewElement).forEach(el => el.style.transition = "all 200ms ease-in-out")
     Array.from(selectedElement.parentElement.children).forEach(el => el.style.transform = '');
@@ -421,6 +422,7 @@ const downEventHandle = (x, y, element) => {
   selectedElement.style.position = "fixed";
   selectedElement.style.zIndex = "2";
   selectedElement.style.width = rect.width + "px";
+  selectedElement.style.transform = 'rotate(2deg)';
   selectedElement.style.transition = "none";
 
   selectedElement.parentElement.parentElement.parentElement.parentElement.style.zIndex = '10';
@@ -489,6 +491,8 @@ const moveEventHandle = (x, y) => {
         listElement.style.transform = "";
       }
     });
+
+  selectedElement.style.transform = 'rotate(2deg)';
 
   previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
 
@@ -618,6 +622,8 @@ const createPageXInterval = (move, isList) => {
         }
       });
 
+    selectedElement.style.transform = 'rotate(2deg)';
+
     previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
   }, 2)
 }
@@ -648,6 +654,7 @@ const createListYInterval = (move) => {
         }
       });
 
+    selectedElement.style.transform = 'rotate(2deg)';
     previewElement.style.transform = previewIsFirst ? "translateY(5px)" : "translateY(-1px)";
   }, 10);
 };
